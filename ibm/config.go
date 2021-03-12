@@ -1137,10 +1137,13 @@ func (c *Config) ClientSession() (interface{}, error) {
 		Authenticator: authenticator,
 	}
 	pnclient, err := pushservicev1.NewPushServiceV1(pushNotificationOptions)
-	if err != nil {
+	if err == nil {
+		// Enable retries for API calls
+		session.pushServiceClient.Service.EnableRetries(c.RetryCount, c.RetryDelay)
+		session.pushServiceClient = pnclient
+	} else {
 		session.pushServiceClientErr = fmt.Errorf("Error occured while configuring push notification service: %q", err)
 	}
-	session.pushServiceClient = pnclient
 
 	//cosconfigurl := fmt.Sprintf("https://%s.iaas.cloud.ibm.com/v1", c.Region)
 	cosconfigoptions := &cosconfig.ResourceConfigurationV1Options{

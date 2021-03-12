@@ -18,12 +18,13 @@ func resourceIBMPNApplicationChrome() *schema.Resource {
 			"application_id": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Unique ID of the application using the push service.",
+				ForceNew:    true,
+				Description: "Unique guid of the application using the push service.",
 			},
-			"api_key": {
+			"sender_id": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "An API key that gives the push service an authorized access to Google services that is used for Chrome Web Push.",
+				Description: "An senderId that gives the push service an authorized access to Google services that is used for Chrome Web Push.",
 			},
 			"web_site_url": {
 				Type:        schema.TypeString,
@@ -40,26 +41,28 @@ func resourceApplicationChromeCreate(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	serverKey := d.Get("api_key").(string)
+	serverKey := d.Get("sender_id").(string)
 	websiteURL := d.Get("web_site_url").(string)
-	applicationGUID := d.Get("application_id").(string)
+	applicationID := d.Get("application_id").(string)
 
 	_, response, err := pnClient.SaveChromeWebConf(&pushservicev1.SaveChromeWebConfOptions{
-		ApplicationID: &applicationGUID,
+		ApplicationID: &applicationID,
 		ApiKey:        &serverKey,
 		WebSiteURL:    &websiteURL,
 	})
 
 	if err != nil {
+		d.SetId("")
 		return fmt.Errorf("Error configuring chrome web platform: %s with responce code  %d", err, response.StatusCode)
 	}
+	d.SetId(applicationID)
 
 	return resourceApplicationChromeRead(d, meta)
 }
 
 func resourceApplicationChromeUpdate(d *schema.ResourceData, meta interface{}) error {
 
-	if d.HasChanges("api_key", "web_site_url") {
+	if d.HasChanges("sender_id", "web_site_url") {
 		return resourceApplicationChromeCreate(d, meta)
 	}
 	return nil
@@ -71,20 +74,24 @@ func resourceApplicationChromeRead(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	applicationGUID := d.Get("application_id").(string)
+	applicationID := d.Id()
 
 	result, response, err := pnClient.GetChromeWebConf(&pushservicev1.GetChromeWebConfOptions{
-		ApplicationID: &applicationGUID,
+		ApplicationID: &applicationID,
 	})
 
 	if err != nil {
+		if response.StatusCode == 404 {
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("Error fetching chrome web platform configuration: %s with responce code  %d", err, response.StatusCode)
 	}
 
-	d.SetId(dataSourceIbmPnApplicationChromeID(d))
+	d.SetId(applicationID)
 
 	if response.StatusCode == 200 {
-		d.Set("api_key", *result.ApiKey)
+		d.Set("sender_id", *result.ApiKey)
 		d.Set("web_site_url", *result.WebSiteURL)
 	}
 	return nil
@@ -95,13 +102,17 @@ func resourceApplicationChromeDelete(d *schema.ResourceData, meta interface{}) e
 	if err != nil {
 		return err
 	}
-	applicationGUID := d.Get("application_id").(string)
+	applicationID := d.Get("application_id").(string)
 
-	response, e := pnClient.DeleteChromeWebConf(&pushservicev1.DeleteChromeWebConfOptions{
-		ApplicationID: &applicationGUID,
+	response, err := pnClient.DeleteChromeWebConf(&pushservicev1.DeleteChromeWebConfOptions{
+		ApplicationID: &applicationID,
 	})
 
-	if e != nil {
+	if err != nil {
+		if response.StatusCode == 404 {
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("Error deleting chrome web platform configuration: %s with responce code  %d", err, response.StatusCode)
 	}
 

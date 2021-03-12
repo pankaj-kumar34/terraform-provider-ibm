@@ -4,13 +4,16 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/IBM/push-notifications-go-sdk/pushservicev1"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccIBMResourcePNApplicationChrome_Basic(t *testing.T) {
+	var conf pushservicev1.ChromeWebPushCredendialsModel
 	name := fmt.Sprintf("terraform_PN_%d", acctest.RandIntRange(10, 100))
-	apiKey := fmt.Sprint(acctest.RandString(45))                  // dummy value
+	senderID := fmt.Sprint(acctest.RandString(45))                // dummy value
 	websiteURL := "http://webpushnotificatons.mybluemix.net"      // dummy url
 	newWebsiteURL := "http://chromepushnotificaton.mybluemix.net" // dummy url
 	resource.Test(t, resource.TestCase{
@@ -18,13 +21,14 @@ func TestAccIBMResourcePNApplicationChrome_Basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckIBMResourcePNApplicationChromeConfig(name, apiKey, websiteURL),
+				Config: testAccCheckIBMResourcePNApplicationChromeConfig(name, senderID, websiteURL),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIBMResourcePNApplicationChromeExists("ibm_pn_application_chrome.application_chrome", conf),
 					resource.TestCheckResourceAttrSet("ibm_pn_application_chrome.application_chrome", "id"),
 				),
 			},
 			{
-				Config: testAccCheckIBMResourcePNApplicationChromeUpdate(name, apiKey, newWebsiteURL),
+				Config: testAccCheckIBMResourcePNApplicationChromeUpdate(name, senderID, newWebsiteURL),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("ibm_pn_application_chrome.application_chrome", "web_site_url", newWebsiteURL),
 				),
@@ -33,7 +37,7 @@ func TestAccIBMResourcePNApplicationChrome_Basic(t *testing.T) {
 	})
 }
 
-func testAccCheckIBMResourcePNApplicationChromeConfig(name, apiKey, websiteURL string) string {
+func testAccCheckIBMResourcePNApplicationChromeConfig(name, senderID, websiteURL string) string {
 	return fmt.Sprintf(`
 	resource "ibm_resource_instance" "push_notification"{
 		name     = "%s"
@@ -42,23 +46,51 @@ func testAccCheckIBMResourcePNApplicationChromeConfig(name, apiKey, websiteURL s
 		plan     = "lite"
 	}
 	resource "ibm_pn_application_chrome" "application_chrome" {
-		api_key            		= "%s"
+		sender_id            		= "%s"
 		web_site_url           = "%s"
 		application_id = ibm_resource_instance.push_notification.guid
-	}`, name, apiKey, websiteURL)
+	}`, name, senderID, websiteURL)
 }
 
-func testAccCheckIBMResourcePNApplicationChromeUpdate(name, apiKey, newWebsiteURL string) string {
+func testAccCheckIBMResourcePNApplicationChromeUpdate(name, senderID, newWebsiteURL string) string {
 	return fmt.Sprintf(`
-	resource "ibm_resource_instance" "push_notification"{
-		name     = "%s"
-		location = "us-south"
-		service  = "imfpush"
-		plan     = "lite"
-	}
+		resource "ibm_resource_instance" "push_notification"{
+			name     = "%s"
+			location = "us-south"
+			service  = "imfpush"
+			plan     = "lite"
+		}
 		resource "ibm_pn_application_chrome" "application_chrome" {
-			api_key            		= "%s"
+			sender_id            	 = "%s"
 			web_site_url           = "%s"
 			application_id = ibm_resource_instance.push_notification.guid
-		}`, name, apiKey, newWebsiteURL)
+		}`, name, senderID, newWebsiteURL)
+}
+
+func testAccCheckIBMResourcePNApplicationChromeExists(n string, obj pushservicev1.ChromeWebPushCredendialsModel) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		pushServiceClient, err := testAccProvider.Meta().(ClientSession).PushServiceV1()
+		if err != nil {
+			return err
+		}
+
+		getChromeWebConfOptions := &pushservicev1.GetChromeWebConfOptions{}
+
+		applicationID := rs.Primary.ID
+
+		getChromeWebConfOptions.SetApplicationID(applicationID)
+
+		chromeConf, _, err := pushServiceClient.GetChromeWebConf(getChromeWebConfOptions)
+		if err != nil {
+			return err
+		}
+
+		obj = *chromeConf
+		return nil
+	}
 }

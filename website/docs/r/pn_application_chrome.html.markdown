@@ -1,22 +1,22 @@
 ---
 layout: "ibm"
 page_title: "IBM : pn_application_chrome"
-sidebar_current: "docs-ibm-resource-pn-application-chrome"
+subcategory: "Push Notifications"
 description: |-
-  Manages IBM Push Notificaitions Chrome application settings.
+  Create, Update, and Delete application settings for platform chrome web.
 ---
 
 # ibm_pn_application_chrome
 
-Provides an application chrome resource. This allows to configure chrome web platform.
+Provides an application chrome web resource. This allows to configure chrome web platform for push notification.
 
 ## Example Usage
 
 ```hcl
 resource "ibm_pn_application_chrome" "application_chrome" {
+  api_key = "api_key"
+  web_site_url = "web_site_url"
   application_id = "application_id"
-  "api_key" = "api_key"
-  "web_site_url" = "web_site_url"
 }
 ```
 
@@ -33,5 +33,3 @@ The following arguments are supported:
 The following attributes are exported:
 
 - `id` - The unique identifier of the resource application chrome.
-- `api_key` - Server key that provides Push Notification service authorized access to Google services that is used for Chrome Web Push.
-- `web_site_url` - The URL of the website/web application that should be permitted to subscribe to Web Push.

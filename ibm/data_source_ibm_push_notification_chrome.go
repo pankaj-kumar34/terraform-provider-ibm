@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/IBM/push-notifications-go-sdk/pushservicev1"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -19,12 +18,13 @@ func dataSourceIBMPNApplicationChrome() *schema.Resource {
 			"application_id": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Unique ID of the application using the push service.",
+				ForceNew:    true,
+				Description: "Unique guid of the application using the push service.",
 			},
-			"api_key": {
+			"sender_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "An API key that gives the push service an authorized access to Google services that is used for Chrome Web Push.",
+				Description: "An senderId that gives the push service an authorized access to Google services that is used for Chrome Web Push.",
 			},
 			"web_site_url": {
 				Type:        schema.TypeString,
@@ -43,7 +43,8 @@ func dataSourceApplicationChromeRead(context context.Context, d *schema.Resource
 
 	getChromeWebConfOptions := &pushservicev1.GetChromeWebConfOptions{}
 
-	getChromeWebConfOptions.SetApplicationID(d.Get("application_id").(string))
+	applicationID := d.Get("application_id").(string)
+	getChromeWebConfOptions.SetApplicationID(applicationID)
 
 	chromeWebPushCredendialsModel, response, err := pushServiceClient.GetChromeWebConfWithContext(context, getChromeWebConfOptions)
 	if err != nil {
@@ -51,18 +52,13 @@ func dataSourceApplicationChromeRead(context context.Context, d *schema.Resource
 		return diag.FromErr(err)
 	}
 
-	d.SetId(dataSourceIbmPnApplicationChromeID(d))
-	if err = d.Set("api_key", chromeWebPushCredendialsModel.ApiKey); err != nil {
-		return diag.FromErr(fmt.Errorf("Error setting api_key: %s", err))
+	d.SetId(applicationID)
+	if err = d.Set("sender_id", chromeWebPushCredendialsModel.ApiKey); err != nil {
+		return diag.FromErr(fmt.Errorf("Error setting sender_id: %s", err))
 	}
 	if err = d.Set("web_site_url", chromeWebPushCredendialsModel.WebSiteURL); err != nil {
 		return diag.FromErr(fmt.Errorf("Error setting web_site_url: %s", err))
 	}
 
 	return nil
-}
-
-// dataSourceIbmPnApplicationChromeID returns a reasonable ID for the list.
-func dataSourceIbmPnApplicationChromeID(d *schema.ResourceData) string {
-	return time.Now().UTC().String()
 }

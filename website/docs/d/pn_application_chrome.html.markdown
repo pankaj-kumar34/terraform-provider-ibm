@@ -1,9 +1,9 @@
 ---
 layout: "ibm"
 page_title: "IBM : pn_application_chrome"
-sidebar_current: "docs-ibm-datasource-pn-application-chrome"
+subcategory: "Push Notifications"
 description: |-
-  Get configuration of platform chrome web
+  Get settings of platform chrome web
 ---
 
 # ibm_pn_application_chrome
@@ -22,7 +22,7 @@ data "pn_application_chrome" "pn_application_chrome" {
 
 The following arguments are supported:
 
-- `application_id` - (Required, string) Unique ID of the application using the push service.
+- `application_id` - (Required, string) Unique guid of the application using the push service.
 
 ## Attribute Reference
 
