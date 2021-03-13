@@ -1139,7 +1139,7 @@ func (c *Config) ClientSession() (interface{}, error) {
 	pnclient, err := pushservicev1.NewPushServiceV1(pushNotificationOptions)
 	if err == nil {
 		// Enable retries for API calls
-		session.pushServiceClient.Service.EnableRetries(c.RetryCount, c.RetryDelay)
+		pnclient.EnableRetries(c.RetryCount, c.RetryDelay)
 		session.pushServiceClient = pnclient
 	} else {
 		session.pushServiceClientErr = fmt.Errorf("Error occured while configuring push notification service: %q", err)

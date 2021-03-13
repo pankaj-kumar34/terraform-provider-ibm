@@ -15,16 +15,16 @@ func dataSourceIBMPNApplicationChrome() *schema.Resource {
 		ReadContext: dataSourceApplicationChromeRead,
 
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			"guid": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
 				Description: "Unique guid of the application using the push service.",
 			},
-			"sender_id": {
+			"server_key": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "An senderId that gives the push service an authorized access to Google services that is used for Chrome Web Push.",
+				Description: "A server key that gives the push service an authorized access to Google services that is used for Chrome Web Push.",
 			},
 			"web_site_url": {
 				Type:        schema.TypeString,
@@ -43,20 +43,20 @@ func dataSourceApplicationChromeRead(context context.Context, d *schema.Resource
 
 	getChromeWebConfOptions := &pushservicev1.GetChromeWebConfOptions{}
 
-	applicationID := d.Get("application_id").(string)
-	getChromeWebConfOptions.SetApplicationID(applicationID)
+	guid := d.Get("guid").(string)
+	getChromeWebConfOptions.SetApplicationID(guid)
 
-	chromeWebPushCredendialsModel, response, err := pushServiceClient.GetChromeWebConfWithContext(context, getChromeWebConfOptions)
+	chromeWebConf, response, err := pushServiceClient.GetChromeWebConfWithContext(context, getChromeWebConfOptions)
 	if err != nil {
 		log.Printf("[DEBUG] GetChromeWebConfWithContext failed %s\n%d", err, response.StatusCode)
 		return diag.FromErr(err)
 	}
 
-	d.SetId(applicationID)
-	if err = d.Set("sender_id", chromeWebPushCredendialsModel.ApiKey); err != nil {
-		return diag.FromErr(fmt.Errorf("Error setting sender_id: %s", err))
+	d.SetId(guid)
+	if err = d.Set("server_key", chromeWebConf.ApiKey); err != nil {
+		return diag.FromErr(fmt.Errorf("Error setting server_key: %s", err))
 	}
-	if err = d.Set("web_site_url", chromeWebPushCredendialsModel.WebSiteURL); err != nil {
+	if err = d.Set("web_site_url", chromeWebConf.WebSiteURL); err != nil {
 		return diag.FromErr(fmt.Errorf("Error setting web_site_url: %s", err))
 	}
 
