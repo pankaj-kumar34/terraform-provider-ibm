@@ -7,6 +7,7 @@ require (
 	github.com/IBM-Cloud/bluemix-go v0.0.0-20210419045805-b50610722085
 	github.com/IBM-Cloud/power-go-client v1.0.55
 	github.com/IBM/apigateway-go-sdk v0.0.0-20200414212859-416e5948678a
+	github.com/IBM/appconfiguration-go-admin-sdk v0.0.0-00010101000000-000000000000
 	github.com/IBM/go-sdk-core v1.1.0
 	github.com/IBM/go-sdk-core/v3 v3.3.1
 	github.com/IBM/go-sdk-core/v4 v4.10.0
@@ -55,3 +56,5 @@ require (
 replace github.com/softlayer/softlayer-go v0.0.0-20190814165317-b9062a914a22 => ./common/github.com/softlayer/softlayer-go
 
 replace github.ibm.com/ibmcloud/kubernetesservice-go-sdk => ./common/github.ibm.com/ibmcloud/kubernetesservice-go-sdk
+
+replace github.com/IBM/appconfiguration-go-admin-sdk => /Users/pankajkumar/Desktop/AppConfig/appconfiguration-go-admin-sdk

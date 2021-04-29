@@ -17,6 +17,7 @@ import (
 	// Added code for the Power Colo Offering
 
 	apigateway "github.com/IBM/apigateway-go-sdk"
+	"github.com/IBM/appconfiguration-go-admin-sdk/appconfigurationv1"
 	"github.com/IBM/go-sdk-core/v4/core"
 	cosconfig "github.com/IBM/ibm-cos-sdk-go-config/resourceconfigurationv1"
 	kp "github.com/IBM/keyprotect-go-client"
@@ -209,6 +210,7 @@ type ClientSession interface {
 	IBMPISession() (*ibmpisession.IBMPISession, error)
 	UserManagementAPI() (usermanagementv2.UserManagementAPI, error)
 	PushServiceV1() (*pushservicev1.PushServiceV1, error)
+	AppConfigurationV1() (*appconfigurationv1.AppConfigurationV1, error)
 	CertificateManagerAPI() (certificatemanager.CertificateManagerServiceAPI, error)
 	keyProtectAPI() (*kp.Client, error)
 	keyManagementAPI() (*kp.Client, error)
@@ -358,6 +360,9 @@ type clientSession struct {
 
 	pushServiceClient    *pushservicev1.PushServiceV1
 	pushServiceClientErr error
+
+	appConfigurationClient    *appconfigurationv1.AppConfigurationV1
+	appConfigurationClientErr error
 
 	vpcClassicErr error
 	vpcClassicAPI *vpcclassic.VpcClassicV1
@@ -647,6 +652,10 @@ func (sess clientSession) APIGateway() (*apigateway.ApiGatewayControllerApiV1, e
 
 func (session clientSession) PushServiceV1() (*pushservicev1.PushServiceV1, error) {
 	return session.pushServiceClient, session.pushServiceClientErr
+}
+
+func (session clientSession) AppConfigurationV1() (*appconfigurationv1.AppConfigurationV1, error) {
+	return session.appConfigurationClient, session.appConfigurationClientErr
 }
 
 func (sess clientSession) keyProtectAPI() (*kp.Client, error) {
@@ -1263,6 +1272,18 @@ func (c *Config) ClientSession() (interface{}, error) {
 		session.pushServiceClient = pnclient
 	} else {
 		session.pushServiceClientErr = fmt.Errorf("Error occured while configuring push notification service: %q", err)
+	}
+
+	appConfigurationClientOptions := &appconfigurationv1.AppConfigurationV1Options{
+		Authenticator: authenticator,
+	}
+	appConfigClient, err := appconfigurationv1.NewAppConfigurationV1(appConfigurationClientOptions)
+	if appConfigClient != nil {
+		// Enable retries for API calls
+		appConfigClient.Service.EnableRetries(c.RetryCount, c.RetryDelay)
+		session.appConfigurationClient = appConfigClient
+	} else {
+		session.appConfigurationClientErr = fmt.Errorf("Error occurred while configuring App Configuration service: %q", err)
 	}
 
 	//cosconfigurl := fmt.Sprintf("https://%s.iaas.cloud.ibm.com/v1", c.Region)
