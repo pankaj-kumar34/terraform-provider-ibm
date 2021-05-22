@@ -89,6 +89,10 @@ const (
 	isInstanceVolumeAttached    = "attached"
 	isInstanceVolumeDetaching   = "detaching"
 	isInstanceResourceGroup     = "resource_group"
+
+	isPlacementTargetDedicatedHost      = "dedicated_host"
+	isPlacementTargetDedicatedHostGroup = "dedicated_host_group"
+	isInstancePlacementTarget           = "placement_target"
 )
 
 func resourceIBMISInstance() *schema.Resource {
@@ -357,6 +361,22 @@ func resourceIBMISInstance() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				Description: "Instance resource group",
+			},
+
+			isPlacementTargetDedicatedHost: {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{isPlacementTargetDedicatedHostGroup},
+				Description:   "Unique Identifier of the Dedicated Host where the instance will be placed",
+			},
+
+			isPlacementTargetDedicatedHostGroup: {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{isPlacementTargetDedicatedHost},
+				Description:   "Unique Identifier of the Dedicated Host Group where the instance will be placed",
 			},
 
 			isInstanceCPU: {
@@ -729,6 +749,23 @@ func instanceCreate(d *schema.ResourceData, meta interface{}, profile, name, vpc
 			ID: &vpcID,
 		},
 	}
+
+	if dHostIdInf, ok := d.GetOk(isPlacementTargetDedicatedHost); ok {
+		dHostIdStr := dHostIdInf.(string)
+		dHostPlaementTarget := &vpcv1.InstancePlacementTargetPrototypeDedicatedHostIdentity{
+			ID: &dHostIdStr,
+		}
+		instanceproto.PlacementTarget = dHostPlaementTarget
+	}
+
+	if dHostGrpIdInf, ok := d.GetOk(isPlacementTargetDedicatedHostGroup); ok {
+		dHostGrpIdStr := dHostGrpIdInf.(string)
+		dHostGrpPlaementTarget := &vpcv1.InstancePlacementTargetPrototypeDedicatedHostGroupIdentity{
+			ID: &dHostGrpIdStr,
+		}
+		instanceproto.PlacementTarget = dHostGrpPlaementTarget
+	}
+
 	if boot, ok := d.GetOk(isInstanceBootVolume); ok {
 		bootvol := boot.([]interface{})[0].(map[string]interface{})
 		var volTemplate = &vpcv1.VolumePrototypeInstanceByImageContext{}
@@ -1913,7 +1950,7 @@ func instanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange(isInstanceProfile) {
+	if d.HasChange(isInstanceProfile) && !d.IsNewResource() {
 
 		getinsOptions := &vpcv1.GetInstanceOptions{
 			ID: &id,
@@ -1966,6 +2003,23 @@ func instanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, response, err = instanceC.UpdateInstance(updnetoptions)
 		if err != nil {
 			return fmt.Errorf("Error in UpdateInstancePatch: %s\n%s", err, response)
+		}
+
+		actiontype := "start"
+		createinsactoptions := &vpcv1.CreateInstanceActionOptions{
+			InstanceID: &id,
+			Type:       &actiontype,
+		}
+		_, response, err = instanceC.CreateInstanceAction(createinsactoptions)
+		if err != nil {
+			if response != nil && response.StatusCode == 404 {
+				return nil
+			}
+			return fmt.Errorf("Error Creating Instance Action: %s\n%s", err, response)
+		}
+		_, err = isWaitForInstanceAvailable(instanceC, d.Id(), d.Timeout(schema.TimeoutUpdate), d)
+		if err != nil {
+			return err
 		}
 
 	}

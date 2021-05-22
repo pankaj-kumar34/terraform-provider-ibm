@@ -1,3 +1,105 @@
+## 1.25.0 (May18, 2021)
+FEATURES:
+* Support Resource Tag Management
+    - **Resources**
+        - ibm_resource_tag
+    - **DataSources**
+        - ibm_resource_tag
+* Support VPC dedicated host disk management
+    - **Resources**
+        - ibm_is_dedicated_host_disk_management
+    - **DataSources**
+        - ibm_is_dedicated_host_disk
+        - ibm_is_dedicated_host_disks
+* Support IAM User API Key
+    - **Resources**
+        - ibm_iam_api_key
+    - **DataSources**
+        - ibm_iam_api_key
+* Support VPC endpoint target gateways
+    - **DataSources**
+        - ibm_is_endpoint_gateway_targets
+* Support VPC security group target management
+    - **Resources**
+        - ibm_is_security_group_target
+    - **DataSources**
+        - ibm_is_security_group_target
+        - ibm_is_security_group_targets
+* Support COS Bucket Object
+    - **Resources**
+        - ibm_cos_bucket_object
+    - **DataSources**
+        - ibm_cos_bucket_object
+* Support container Registry Retention Policy
+    - **Resources**
+        - ibm_cr_retention_policy
+	
+
+ENHANCEMENTS
+* Add the capabilities for offering speeds which provides the bmetered and unmetered
+billing options for that offering speed ([#2584](https://github.com/IBM-Cloud/terraform-provider-ibm/pull/2584))
+
+* Support for dedicated host/group in instance template and instance ([#2579](https://github.com/IBM-Cloud/terraform-provider-ibm/issues/2579))
+
+* location, managed_from and resource_group_id mark these attibutes in ibm_satellite_location either DiffSuppress or throw back an error ([#2567](https://github.com/IBM-Cloud/terraform-provider-ibm/issues/2567))
+
+* Add max allowed sessions to account settings ([#2610](https://github.com/IBM-Cloud/terraform-provider-ibm/pull/2610))
+
+* Add vcpus and memory to instance profiles data source ([#2492](https://github.com/IBM-Cloud/terraform-provider-ibm/issues/2492))
+
+* Support creating IAM policies with operator ([#2533](https://github.com/IBM-Cloud/terraform-provider-ibm/issues/2533))
+
+* Mark ibm_container_cluster_config `admin_certificate`, `ca_certificate`, `token` attributes as sensitive ([#2622](https://github.com/IBM-Cloud/terraform-provider-ibm/pull/2622))
+
+* Bump up go version: 1.16 ([#2600](https://github.com/IBM-Cloud/terraform-provider-ibm/pull/2600))
+
+
+BUGFIXES
+* Fix the deletion of instance group due to load balancer status ([#2547](https://github.com/IBM-Cloud/terraform-provider-ibm/pull/2547))
+
+* No way to make a vpc_address_prefix default on vpc when using manual address_prefix_management ([#2282](https://github.com/IBM-Cloud/terraform-provider-ibm/issues/2282))
+
+* ibm_is_image data source silently fails if the image is not available ([#2587](https://github.com/IBM-Cloud/terraform-provider-ibm/issues/2587))
+
+* ibm_is_image data source does not provide a warning if the image is deprecated ([#2588](https://github.com/IBM-Cloud/terraform-provider-ibm/issues/2588))
+
+* update azure script to grow root volume group ([#2621](https://github.com/IBM-Cloud/terraform-provider-ibm/pull/2621))
+
+* instance group manager policy synchronization ([#2635](https://github.com/IBM-Cloud/terraform-provider-ibm/pull/2635))
+
+* Fix the db task timeout ([#2607](https://github.com/IBM-Cloud/terraform-provider-ibm/pull/2607))
+
+* KMS keys created with endpoint_type = "public" regardless of the actual setting ([#2482](https://github.com/IBM-Cloud/terraform-provider-ibm/issues/2482))
+
+* Error finding VLAN order: couldn't find resource (21 retries) ([#2613](https://github.com/IBM-Cloud/terraform-provider-ibm/issues/2613))
+
+* Terraform import for routingtable fails ([#2580](https://github.com/IBM-Cloud/terraform-provider-ibm/issues/2580))
+
+
+## 1.24.0 (May04, 2021)
+FEATURES:
+* Support VPC instance disk management
+    - **Resources**
+        - ibm_is_instance_disk_management
+    - **DataSources**
+        - ibm_is_instance_disk
+        - ibm_is_instance_disks
+	
+ENHANCEMENTS
+* Support resize of VPC instance ([#2448](https://github.com/IBM-Cloud/terraform-provider-ibm/issues/2448))
+* Support Load balancer Parameter based routing ([#2518](https://github.com/IBM-Cloud/terraform-provider-ibm/pull/2516))
+* Support horizontal scaling on database with new arguments node_count, node_memory_allocation_mb, node_disk_allocation_mb, node_cpu_allocation_count ([#2313](https://github.com/IBM-Cloud/terraform-provider-ibm/issues/2313))
+* Support request_metrics_enabled for COS Bucket metric monitoring ([#2530](https://github.com/IBM-Cloud/terraform-provider-ibm/pull/2530))
+* Support virtual endpoint gateway as target to subnet reserved IP ([#2521](https://github.com/IBM-Cloud/terraform-provider-ibm/pull/2521))
+
+BUGFIXES
+* Creating ibm_pi_key fails everytime with context deadline exceeded ([#2527](https://github.com/IBM-Cloud/terraform-provider-ibm/issues/2527))
+* Fix diff on resource key parameters ([#2182](https://github.com/IBM-Cloud/terraform-provider-ibm/issues/2182))
+* Fails to create PTR records causing Terraform crash ([#2535](https://github.com/IBM-Cloud/terraform-provider-ibm/issues/2535))
+* Fix crash for VPC instance group manager ([#2554](https://github.com/IBM-Cloud/terraform-provider-ibm/pull/2554))
+* VPC network ACL rule ICMP does not set type ([#2559](https://github.com/IBM-Cloud/terraform-provider-ibm/issues/2559))
+* Conflict with exec.image and exec.code/exec.code_path (can't use custom docker images) ([#2556](https://github.com/IBM-Cloud/terraform-provider-ibm/issues/2556))
+
 ## 1.23.2 (Apr20, 2021)
 ENHANCEMENTS
 * Add support for COS retention policy ([#1880](https://github.com/IBM-Cloud/terraform-provider-ibm/issues/1880))
@@ -56,12 +158,6 @@ BUGFIXES
 * Fix documentation updates ([#2443](https://github.com/IBM-Cloud/terraform-provider-ibm/pull/2443))
 * Fix Dedicated host with status 'failed' throws error during destroy ([#2443](https://github.com/IBM-Cloud/terraform-provider-ibm/issues/2446))
 * Fix while creating a DL Connect gateway do not wait for gateway to be provisioned for few providers ([#2458](https://github.com/IBM-Cloud/terraform-provider-ibm/pull/2458))
-
-## 1.22.1 (Apr01, 2021)
-
-BUGFIXES
-* Fix the provision of classic Infrastructure VM to apply sshkeys, imageid and script ([#2448](https://github.com/IBM-Cloud/terraform-provider-ibm/pull/2448))
-* Fix documentation updates ([#2443](https://github.com/IBM-Cloud/terraform-provider-ibm/pull/2443))
 
 ## 1.22.0 (Mar30, 2021)
 
