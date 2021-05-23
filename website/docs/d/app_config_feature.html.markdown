@@ -1,19 +1,19 @@
 ---
 subcategory: 'App Configuration'
 layout: 'ibm'
-page_title: 'IBM : app_config_feature'
+page_title: 'IBM : App Configuration feature flag'
 description: |-
-  Get information about Feature flag
+  Get information about feature flag
 ---
 
 # ibm_app_config_feature
 
-Provides a read-only data source for Feature flag. You can then reference the fields of the data source in other resources within the same configuration using interpolation syntax.
+Provides a read-only data source for `feature flag`. You can then reference the fields of the data source in other resources within the same configuration using interpolation syntax.
 
 ## Example Usage
 
 ```hcl
-data "app_config_feature" "app_config_feature" {
+data "ibm_app_config_feature" "app_config_feature" {
   guid = "guid"
   feature_id = "feature_id"
   includes = "includes"
@@ -25,16 +25,16 @@ data "app_config_feature" "app_config_feature" {
 
 The following arguments are supported:
 
-- `guid` - (Required, string) GUID of the App Configuration service. Get it from the service instance credentials section of the dashboard.
+- `guid` - (Required, string) guid of the App Configuration service. Get it from the service instance credentials section of the dashboard.
 - `feature_id` - (Required, string) Feature Id.
 - `environment_id` - (Required, string) Environment Id.
 - `includes` - (Optional, string) Include the associated collections in the response.
 
 ## Attribute Reference
 
-The following attributes are exported:
+In addition to all argument references list, you can access the following attribute references after your resource is created.
 
-- `id` - The unique identifier of the Feature.
+- `id` - The unique identifier of the feature flag resource.
 - `name` - Feature name.
 - `description` - Feature description.
 - `type` - Type of the feature (BOOLEAN, STRING, NUMERIC).
@@ -51,10 +51,8 @@ The following attributes are exported:
 
 - `segment_exists` - Denotes if the targeting rules are specified for the feature flag.
 - `collections` - List of collection id representing the collections that are associated with the specified feature flag. Nested `collections` blocks have the following structure:
-
   - `collection_id` - Collection id.
   - `name` - Name of the collection.
-
 - `created_time` - Creation time of the feature flag.
 - `updated_time` - Last modified time of the feature flag data.
 - `href` - Feature flag URL.

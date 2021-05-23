@@ -60,7 +60,7 @@ func dataSourceIbmAppConfigFeatures() *schema.Resource {
 			"includes": {
 				Type:        schema.TypeList,
 				Optional:    true,
-				Description: "Include the associated collections or targeting rules details in the response",
+				Description: "Include the associated collections or targeting rules details in the response.",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"limit": {
@@ -274,9 +274,6 @@ func dataSourceIbmAppConfigFeaturesRead(d *schema.ResourceData, meta interface{}
 	options.SetEnvironmentID(d.Get("environment_id").(string))
 	if _, ok := d.GetOk("expand"); ok {
 		options.SetExpand(d.Get("expand").(bool))
-	}
-	if _, ok := d.GetOk("includes"); ok {
-		options.SetInclude(d.Get("includes").([]string))
 	}
 	if _, ok := d.GetOk("tags"); ok {
 		options.SetTags(d.Get("tags").(string))

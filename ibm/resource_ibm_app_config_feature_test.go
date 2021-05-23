@@ -17,7 +17,6 @@ import (
 func TestAccIbmIbmAppConfigFeatureBasic(t *testing.T) {
 	var conf appconfigurationv1.Feature
 	instanceName := fmt.Sprintf("tf_app_config_test_%d", acctest.RandIntRange(10, 100))
-	environmentID := fmt.Sprintf("env_%d", acctest.RandIntRange(10, 100))
 	name := fmt.Sprintf("tf_name_%d", acctest.RandIntRange(10, 100))
 	featureID := fmt.Sprintf("tf_feature_id_%d", acctest.RandIntRange(10, 100))
 	featureType := "BOOLEAN"
@@ -33,7 +32,7 @@ func TestAccIbmIbmAppConfigFeatureBasic(t *testing.T) {
 		CheckDestroy: testAccCheckIbmAppConfigFeatureDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckIbmAppConfigFeatureConfigBasic(instanceName, environmentID, name, featureID, featureType, description, tags),
+				Config: testAccCheckIbmAppConfigFeatureConfigBasic(instanceName, name, featureID, featureType, description, tags),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIbmAppConfigFeatureExists("ibm_app_config_feature.ibm_app_config_feature_resource1", conf),
 					resource.TestCheckResourceAttrSet("ibm_app_config_feature.ibm_app_config_feature_resource1", "id"),
@@ -47,7 +46,7 @@ func TestAccIbmIbmAppConfigFeatureBasic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCheckIbmAppConfigFeatureConfigBasic(instanceName, environmentID, nameUpdate, featureID, featureType, descriptionUpdate, tagsUpdated),
+				Config: testAccCheckIbmAppConfigFeatureConfigBasic(instanceName, nameUpdate, featureID, featureType, descriptionUpdate, tagsUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("ibm_app_config_feature.ibm_app_config_feature_resource1", "name", nameUpdate),
 					resource.TestCheckResourceAttr("ibm_app_config_feature.ibm_app_config_feature_resource1", "tags", tagsUpdated),
@@ -58,7 +57,7 @@ func TestAccIbmIbmAppConfigFeatureBasic(t *testing.T) {
 	})
 }
 
-func testAccCheckIbmAppConfigFeatureConfigBasic(name, environmentID, envName, featureID, featureType, description, tags string) string {
+func testAccCheckIbmAppConfigFeatureConfigBasic(name, envName, featureID, featureType, description, tags string) string {
 	return fmt.Sprintf(`
 		resource "ibm_resource_instance" "app_config_terraform_test456" {
 			name     = "%s"
@@ -69,14 +68,14 @@ func testAccCheckIbmAppConfigFeatureConfigBasic(name, environmentID, envName, fe
 		resource "ibm_app_config_feature" "ibm_app_config_feature_resource1" {
 			guid           	= ibm_resource_instance.app_config_terraform_test456.guid
 			name           	= "%s"
-			environment_id  = "%s"
+			environment_id  = "dev"
 			feature_id     	= "%s"
 			type           	= "%s"
 			enabled_value  	= true
 			disabled_value 	= false
 			description    	= "%s"
 			tags    			 	= "%s"
-		}`, name, envName, environmentID, featureID, featureType, description, tags)
+		}`, name, envName, featureID, featureType, description, tags)
 }
 
 func testAccCheckIbmAppConfigFeatureExists(n string, obj appconfigurationv1.Feature) resource.TestCheckFunc {

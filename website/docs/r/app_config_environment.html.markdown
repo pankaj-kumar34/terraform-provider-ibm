@@ -1,19 +1,19 @@
 ---
 subcategory: 'App Configuration'
 layout: 'ibm'
-page_title: 'IBM : app_config_environment'
+page_title: 'IBM : App Configuration environments'
 description: |-
-  Manages environment.
+  Manages environments.
 ---
 
-# ibm_app_config_feature
+# ibm_app_config_environment
 
-Provides a resource for environment. This allows environment to be created, updated and deleted.
+Provides a resource for `environment`. This allows environment to be created, updated and deleted.
 
 ## Example Usage
 
 ```hcl
-resource "app_config_feature" "app_config_feature" {
+resource "ibm_app_config_environment" "app_config_environment" {
   guid = "guid"
   environment_id = "environment_id"
   name = "name"
@@ -25,17 +25,20 @@ resource "app_config_feature" "app_config_feature" {
 
 ## Argument Reference
 
-The following arguments are supported:
+In addition to all argument references list, you can access the following attribute references after your resource is created.
 
-- `guid` - (Required, string) GUID of the App Configuration service. Get it from the service instance credentials section of the dashboard.
-- `environment_id` - (Required, string) Environment Id.
-- `name` - (Required, string) Feature name.
-- `description` - (Optional, string) Feature description.
-- `tags` - (Optional, string) Tags associated with the feature.
-- `color_code` - (Optional, string) Color code to distinguish the environment.
+- `guid` - (Required, string) guid of the App Configuration service. Get it from the service instance credentials section of the dashboard.
+- `name` - (Required, string) Environment name.
+- `environment_id` - (Required, string) Environment id.
+- `description` - (Optional, string) Environment description.
+- `tags` - (Optional, string) Tags associated with the environment.
+- `color_code` - (Optional, string) Color code to distinguish the environment. The Hex code for the color. For example `#FF0000` for `red`.
 
 ## Attribute Reference
 
-The following attributes are exported:
+In addition to all argument references list, you can access the following attribute references after your resource is created.
 
 - `id` - The unique identifier of the environment resource.
+- `created_time` - Creation time of the environment.
+- `updated_time` - Last modified time of the environment data.
+- `href` - Environment URL.

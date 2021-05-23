@@ -122,6 +122,11 @@ func resourceIbmIbmAppConfigFeature() *schema.Resource {
 				Computed:    true,
 				Description: "Denotes if the targeting rules are specified for the feature flag.",
 			},
+			"enabled": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "The state of the feature flag.",
+			},
 			"created_time": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -339,6 +344,11 @@ func resourceIbmIbmAppConfigFeatureRead(d *schema.ResourceData, meta interface{}
 	if result.Href != nil {
 		if err = d.Set("href", result.Href); err != nil {
 			return fmt.Errorf("error setting href: %s", err)
+		}
+	}
+	if result.Enabled != nil {
+		if err = d.Set("enabled", result.Enabled); err != nil {
+			return fmt.Errorf("error setting enabled: %s", err)
 		}
 	}
 

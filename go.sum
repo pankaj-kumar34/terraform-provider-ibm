@@ -80,6 +80,8 @@ github.com/IBM-Cloud/power-go-client v1.0.55 h1:XoRU8FWYY8NUKau1nkErkf2FHAUbFEbb
 github.com/IBM-Cloud/power-go-client v1.0.55/go.mod h1:I4r5tCrA8mV5GFqGAJG4/Tn+/JpR+XLnDCLLNVKJxuI=
 github.com/IBM/apigateway-go-sdk v0.0.0-20200414212859-416e5948678a h1:lX3vP+9Y5gTP0w6l+4oL0mvNfgXZYJsMdlsiUG43GBw=
 github.com/IBM/apigateway-go-sdk v0.0.0-20200414212859-416e5948678a/go.mod h1:sNVpGpUv3jvA2dQbRPFjVrRFNdmnQrf2QTtKa/c2XrI=
+github.com/IBM/appconfiguration-go-admin-sdk v0.1.0 h1:9rdOk32VQFnMqsBB7cTpkZbD7/b0EnwrU3VNN8vuUYc=
+github.com/IBM/appconfiguration-go-admin-sdk v0.1.0/go.mod h1:6x6KbqIwrEi07OvEM1+EnU4Lyk+JFm2O0vrSPPGTleU=
 github.com/IBM/cloudpakfordata-go-sdk v0.0.0-20191003093330-fead1522985f/go.mod h1:j6hKoyzMruySTcVstW/FLiu2ZewGukmgSeVGaDYY9hY=
 github.com/IBM/container-registry-go-sdk v0.0.12 h1:UEHMFVF+uGEcoLsTu3Ow3db0cl2fEXtXKevgt5QiaSY=
 github.com/IBM/container-registry-go-sdk v0.0.12/go.mod h1:GYi1VN59VaJWWq2xP06o9Vpi6+K8V5vtmji6WjMJf0w=

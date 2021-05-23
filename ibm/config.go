@@ -1252,7 +1252,7 @@ func (c *Config) ClientSession() (interface{}, error) {
 
 	pnurl := fmt.Sprintf("https://%s.imfpush.cloud.ibm.com/imfpush/v1", c.Region)
 	if c.Visibility == "private" {
-		session.pushServiceClientErr = fmt.Errorf("Push Service API doesnot support private endpoints")
+		session.pushServiceClientErr = fmt.Errorf("Push Notifications Service API doesnot support private endpoints")
 	}
 	pushNotificationOptions := &pushservicev1.PushServiceV1Options{
 		URL:           envFallBack([]string{"IBMCLOUD_PUSH_API_ENDPOINT"}, pnurl),
@@ -1266,7 +1266,9 @@ func (c *Config) ClientSession() (interface{}, error) {
 	} else {
 		session.pushServiceClientErr = fmt.Errorf("Error occured while configuring push notification service: %q", err)
 	}
-
+	if c.Visibility == "private" {
+		session.pushServiceClientErr = fmt.Errorf("App Configuration Service API doesnot support private endpoints")
+	}
 	appConfigurationClientOptions := &appconfigurationv1.AppConfigurationV1Options{
 		Authenticator: authenticator,
 	}

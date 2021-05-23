@@ -32,7 +32,7 @@ func TestAccIbmAppConfigFeaturesDataSourceBasic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.ibm_app_config_features.app_config_features_data2", "last.#"),
 					resource.TestCheckResourceAttrSet("data.ibm_app_config_features.app_config_features_data2", "total_count"),
 					resource.TestCheckResourceAttrSet("data.ibm_app_config_features.app_config_features_data2", "features.#"),
-					resource.TestCheckResourceAttrSet("data.ibm_app_config_features.app_config_features_data2", "segment_exists"),
+					resource.TestCheckResourceAttrSet("data.ibm_app_config_features.app_config_features_data2", "features.0.segment_exists"),
 					resource.TestCheckResourceAttr("data.ibm_app_config_features.app_config_features_data2", "features.0.name", name),
 					resource.TestCheckResourceAttr("data.ibm_app_config_features.app_config_features_data2", "features.0.type", featureType),
 					resource.TestCheckResourceAttr("data.ibm_app_config_features.app_config_features_data2", "features.0.feature_id", featureID),
