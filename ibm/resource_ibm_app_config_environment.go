@@ -178,13 +178,9 @@ func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 	result, response, err := appconfigClient.GetEnvironment(options)
 
 	if err != nil {
-		if response != nil && response.StatusCode == 404 {
-			d.SetId("")
-			return nil
-		}
 		return fmt.Errorf("[DEBUG] GetEnvironment failed %s\n%s", err, response)
 	}
-	d.Set("guid", parts[0])
+
 	if result.Name != nil {
 		if err = d.Set("name", result.Name); err != nil {
 			return fmt.Errorf("error setting name: %s", err)

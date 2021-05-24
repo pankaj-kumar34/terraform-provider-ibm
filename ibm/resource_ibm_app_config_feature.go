@@ -272,15 +272,8 @@ func resourceIbmIbmAppConfigFeatureRead(d *schema.ResourceData, meta interface{}
 
 	result, response, err := appconfigClient.GetFeature(options)
 	if err != nil {
-		if response != nil && response.StatusCode == 404 {
-			d.SetId("")
-			return nil
-		}
-		log.Printf("[DEBUG] GetFeature failed %s\n%s", err, response)
-		return err
+		return fmt.Errorf("[DEBUG] GetFeature failed %s\n%s", err, response)
 	}
-	d.Set("guid", parts[0])
-	d.Set("environment_id", parts[1])
 
 	if result.Name != nil {
 		if err = d.Set("name", result.Name); err != nil {
