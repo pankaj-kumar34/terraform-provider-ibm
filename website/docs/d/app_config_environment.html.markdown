@@ -22,7 +22,7 @@ data "ibm_app_config_environment" "app_config_environment" {
 
 ## Argument Reference
 
-In addition to all argument references list, you can access the following attribute references after your resource is created.
+The following arguments are supported:
 
 - `guid` - (Required, string) guid of the App Configuration service. Get it from the service instance credentials section of the dashboard.
 - `environment_id` - (Required, string) Environment Id.
