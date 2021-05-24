@@ -51,8 +51,11 @@ In addition to all argument references list, you can access the following attrib
 
 - `segment_exists` - Denotes if the targeting rules are specified for the feature flag.
 - `collections` - List of collection id representing the collections that are associated with the specified feature flag. Nested `collections` blocks have the following structure:
+
   - `collection_id` - Collection id.
+
   - `name` - Name of the collection.
+
 - `created_time` - Creation time of the feature flag.
 - `updated_time` - Last modified time of the feature flag data.
 - `href` - Feature flag URL.

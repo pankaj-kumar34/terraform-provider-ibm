@@ -56,3 +56,20 @@ In addition to all argument references list, you can access the following attrib
 - `created_time` - Creation time of the feature flag.
 - `updated_time` - Last modified time of the feature flag data.
 - `href` - Feature flag URL.
+
+## Import
+
+The `ibm_app_config_feature` resource can be imported by using `guid` of the App Configuration instance, `environmentId` and `featureId`. Get the `guid` from the service instance credentials section of the dashboard.
+
+**Syntax**
+
+```
+terraform import ibm_app_config_feature.sample  <guid/environmentId/featureId>
+
+```
+
+**Example**
+
+```
+terraform import ibm_app_config_feature.sample 272111153-c118-4116-8116-b811fbc31132/dev/sample_feature
+```

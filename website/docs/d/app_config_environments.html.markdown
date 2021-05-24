@@ -40,12 +40,19 @@ In addition to all argument references list, you can access the following attrib
 - `environments` - Array of environments. Nested `environments` blocks have the following structure:
 
   - `name` - Environment name.
+
   - `environment_id` - Environment id.
+
   - `description` - Environment description.
+
   - `tags` - Tags associated with the environment.
+
   - `color_code` - Color code to distinguish the environment. The Hex code for the color. For example `#FF2200` for `red`.
+
   - `created_time` - Creation time of the environment.
+
   - `updated_time` - Last modified time of the environment data.
+
   - `href` - Environment URL.
 
 - `total_count` - Number of records returned in the current response.

@@ -153,11 +153,8 @@ func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		_, response, err := appconfigClient.UpdateEnvironment(options)
 		if err != nil {
-			d.SetId("")
 			return fmt.Errorf("[DEBUG] UpdateEnvironment failed %s\n%s", err, response)
 		}
-		d.SetId(fmt.Sprintf("%s/%s", parts[0], *options.EnvironmentID))
-
 		return resourceEnvironmentRead(d, meta)
 	}
 	return nil
@@ -187,6 +184,7 @@ func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 		}
 		return fmt.Errorf("[DEBUG] GetEnvironment failed %s\n%s", err, response)
 	}
+	d.Set("guid", parts[0])
 	if result.Name != nil {
 		if err = d.Set("name", result.Name); err != nil {
 			return fmt.Errorf("error setting name: %s", err)

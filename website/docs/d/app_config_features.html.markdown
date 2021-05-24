@@ -46,24 +46,43 @@ In addition to all argument references list, you can access the following attrib
 - `features` - Array of Features. Nested `features` blocks have the following structure:
 
   - `name` - Feature name.
+
   - `feature_id` - Feature id.
+
   - `description` - Feature description.
+
   - `type` - Type of the feature (BOOLEAN, STRING, NUMERIC).
+
   - `enabled_value` - Value of the feature when it is enabled.
+
   - `disabled_value` - Value of the feature when it is disabled.
+
   - `tags` - Tags associated with the feature.
+
   - `enabled` - The state of the feature flag.
+
   - `segment_exists` - Denotes if the targeting rules are specified for the feature flag.
+
   - `segment_rules` - Segment Rules array. Nested `segment_rules` blocks have the following structure:
+
     - `rules` - Rules array. Nested `rules` blocks have the following structure:
+
       - `segments` - Segments array.
+
     - `value` - Value of the segment.
+
     - `order` - Order of the segment, used during evaluation.
+
   - `collections` - Collection array. Nested `collections` blocks have the following structure:
+
     - `collection_id` - Collection id.
+
     - `name` - Name of the collection.
+
   - `created_time` - Creation time of the feature flag.
+
   - `updated_time` - Last modified time of the feature flag data.
+
   - `href` - Feature flag URL.
 
 - `total_count` - Number of records returned in the current response.

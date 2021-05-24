@@ -42,3 +42,20 @@ In addition to all argument references list, you can access the following attrib
 - `created_time` - Creation time of the environment.
 - `updated_time` - Last modified time of the environment data.
 - `href` - Environment URL.
+
+## Import
+
+The `ibm_app_config_environment` resource can be imported by using `guid` of the App Configuration instance and `environmentId`. Get `guid` from the service instance credentials section of the dashboard.
+
+**Syntax**
+
+```
+terraform import ibm_app_config_environment.sample  <guid/environmentId>
+
+```
+
+**Example**
+
+```
+terraform import ibm_app_config_environment.sample 272111153-c118-4116-8116-b811fbc31132/dev
+```

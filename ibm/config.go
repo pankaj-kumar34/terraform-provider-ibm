@@ -936,6 +936,7 @@ func (c *Config) ClientSession() (interface{}, error) {
 		session.containerRegistryClientErr = errEmptyBluemixCredentials
 		session.kpErr = errEmptyBluemixCredentials
 		session.pushServiceClientErr = errEmptyBluemixCredentials
+		session.appConfigurationClientErr = errEmptyBluemixCredentials
 		session.kmsErr = errEmptyBluemixCredentials
 		session.stxConfigErr = errEmptyBluemixCredentials
 		session.cfConfigErr = errEmptyBluemixCredentials
