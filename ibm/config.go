@@ -1267,7 +1267,7 @@ func (c *Config) ClientSession() (interface{}, error) {
 		session.pushServiceClientErr = fmt.Errorf("Error occured while configuring push notification service: %q", err)
 	}
 	if c.Visibility == "private" {
-		session.pushServiceClientErr = fmt.Errorf("App Configuration Service API doesnot support private endpoints")
+		session.appConfigurationClientErr = fmt.Errorf("App Configuration Service API doesnot support private endpoints")
 	}
 	appConfigurationClientOptions := &appconfigurationv1.AppConfigurationV1Options{
 		Authenticator: authenticator,
