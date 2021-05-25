@@ -301,6 +301,7 @@ func Provider() *schema.Provider {
 			"ibm_app_config_environments":            dataSourceIbmAppConfigEnvironments(),
 			"ibm_app_config_feature":                 dataSourceIbmAppConfigFeature(),
 			"ibm_app_config_collection":              dataSourceIbmAppConfigCollection(),
+			"ibm_app_config_collections":             dataSourceIbmAppConfigCollections(),
 			"ibm_app_config_features":                dataSourceIbmAppConfigFeatures(),
 			"ibm_kms_key":                            dataSourceIBMKMSkey(),
 			"ibm_resource_quota":                     dataSourceIBMResourceQuota(),
