@@ -275,6 +275,8 @@ func resourceIbmIbmAppConfigFeatureRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("[DEBUG] GetFeature failed %s\n%s", err, response)
 	}
 
+	d.Set("guid", parts[0])
+	d.Set("environment_id", parts[1])
 	if result.Name != nil {
 		if err = d.Set("name", result.Name); err != nil {
 			return fmt.Errorf("error setting name: %s", err)

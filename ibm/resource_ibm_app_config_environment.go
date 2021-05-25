@@ -180,7 +180,7 @@ func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("[DEBUG] GetEnvironment failed %s\n%s", err, response)
 	}
-
+	d.Set("guid", parts[0])
 	if result.Name != nil {
 		if err = d.Set("name", result.Name); err != nil {
 			return fmt.Errorf("error setting name: %s", err)
