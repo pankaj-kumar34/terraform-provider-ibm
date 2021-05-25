@@ -280,22 +280,22 @@ func dataSourceIbmAppConfigFeaturesRead(d *schema.ResourceData, meta interface{}
 	}
 	if _, ok := d.GetOk("collections"); ok {
 		collections := []string{}
-		for _, segmentsItem := range d.Get("collections").([]interface{}) {
-			collections = append(collections, segmentsItem.(string))
+		for _, item := range d.Get("collections").([]interface{}) {
+			collections = append(collections, item.(string))
 		}
 		options.SetCollections(collections)
 	}
 	if _, ok := d.GetOk("segments"); ok {
 		segments := []string{}
-		for _, segmentsItem := range d.Get("segments").([]interface{}) {
-			segments = append(segments, segmentsItem.(string))
+		for _, item := range d.Get("segments").([]interface{}) {
+			segments = append(segments, item.(string))
 		}
 		options.SetSegments(segments)
 	}
 	if _, ok := d.GetOk("includes"); ok {
 		includes := []string{}
-		for _, segmentsItem := range d.Get("includes").([]interface{}) {
-			includes = append(includes, segmentsItem.(string))
+		for _, item := range d.Get("includes").([]interface{}) {
+			includes = append(includes, item.(string))
 		}
 		options.SetInclude(includes)
 	}
