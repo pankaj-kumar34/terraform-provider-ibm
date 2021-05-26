@@ -124,39 +124,39 @@ func dataSourceIbmAppConfigSegmentRead(d *schema.ResourceData, meta interface{})
 
 	if result.Name != nil {
 		if err = d.Set("name", result.Name); err != nil {
-			return fmt.Errorf("Error setting name: %s", err)
+			return fmt.Errorf("error setting name: %s", err)
 		}
 	}
 	if result.Description != nil {
 		if err = d.Set("description", result.Description); err != nil {
-			return fmt.Errorf("Error setting description: %s", err)
+			return fmt.Errorf("error setting description: %s", err)
 		}
 	}
 	if result.Tags != nil {
 		if err = d.Set("tags", result.Tags); err != nil {
-			return fmt.Errorf("Error setting tags: %s", err)
+			return fmt.Errorf("error setting tags: %s", err)
 		}
 	}
 
 	if result.Rules != nil {
 		err = d.Set("rules", dataSourceSegmentFlattenRules(result.Rules))
 		if err != nil {
-			return fmt.Errorf("Error setting rules %s", err)
+			return fmt.Errorf("error setting rules %s", err)
 		}
 	}
 	if result.CreatedTime != nil {
 		if err = d.Set("created_time", result.CreatedTime.String()); err != nil {
-			return fmt.Errorf("Error setting created_time: %s", err)
+			return fmt.Errorf("error setting created_time: %s", err)
 		}
 	}
 	if result.UpdatedTime != nil {
 		if err = d.Set("updated_time", result.UpdatedTime.String()); err != nil {
-			return fmt.Errorf("Error setting updated_time: %s", err)
+			return fmt.Errorf("error setting updated_time: %s", err)
 		}
 	}
 	if result.Href != nil {
 		if err = d.Set("href", result.Href); err != nil {
-			return fmt.Errorf("Error setting href: %s", err)
+			return fmt.Errorf("error setting href: %s", err)
 		}
 	}
 	return nil
