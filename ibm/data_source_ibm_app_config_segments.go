@@ -132,20 +132,61 @@ func dataSourceIbmAppConfigSegments() *schema.Resource {
 				Computed:    true,
 				Description: "Total number of records.",
 			},
+			"next": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "URL to navigate to the next list of records.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"href": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "URL of the response.",
+						},
+					},
+				},
+			},
 			"first": {
-				Type:        schema.TypeString,
+				Type:        schema.TypeList,
 				Computed:    true,
 				Description: "URL to navigate to the first page of records.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"href": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "URL of the response.",
+						},
+					},
+				},
 			},
 			"previous": {
-				Type:        schema.TypeString,
+				Type:        schema.TypeList,
 				Computed:    true,
 				Description: "URL to navigate to the previous list of records.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"href": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "URL of the response.",
+						},
+					},
+				},
 			},
 			"last": {
-				Type:        schema.TypeString,
+				Type:        schema.TypeList,
 				Computed:    true,
 				Description: "URL to navigate to the last page of records.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"href": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "URL of the response.",
+						},
+					},
+				},
 			},
 		},
 	}
