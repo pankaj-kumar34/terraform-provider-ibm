@@ -15,9 +15,9 @@ import (
 	"github.com/IBM/appconfiguration-go-admin-sdk/appconfigurationv1"
 )
 
-func dataSourceIbmAppConfigEnvironments() *schema.Resource {
+func dataSourceIbmAppConfigSegments() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceIbmAppConfigEnvironmentsRead,
+		Read: dataSourceIbmAppConfigSegmentsRead,
 
 		Schema: map[string]*schema.Schema{
 			"guid": {
@@ -25,6 +25,11 @@ func dataSourceIbmAppConfigEnvironments() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				Description: "GUID of the App Configuration service. Get it from the service instance credentials section of the dashboard.",
+			},
+			"sort": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Sort the segment details based on the specified attribute.",
 			},
 			"tags": {
 				Type:        schema.TypeString,
@@ -46,51 +51,78 @@ func dataSourceIbmAppConfigEnvironments() *schema.Resource {
 				Optional:    true,
 				Description: "The number of records to skip. By specifying `offset`, you retrieve a subset of items that starts with the `offset` value. Use `offset` with `limit` to page through the available records.",
 			},
-			"environments": {
+			"includes": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Segment details to include the associated rules in the response.",
+			},
+			"segments": {
 				Type:        schema.TypeList,
 				Computed:    true,
-				Description: "Array of environments.",
+				Description: "Array of Segments.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Environment name.",
+							Description: "Segment name.",
 						},
-						"environment_id": {
+						"segment_id": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Environment id.",
+							Description: "Segment id.",
 						},
 						"description": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Environment description.",
+							Description: "Segment description.",
 						},
 						"tags": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Tags associated with the environment.",
+							Description: "Tags associated with the segments.",
 						},
-						"color_code": {
-							Type:        schema.TypeString,
+						"rules": {
+							Type:        schema.TypeList,
 							Computed:    true,
-							Description: "Color code to distinguish the environment. The Hex code for the color. For example `#FF0000` for `red`.",
+							Description: "List of rules that determine if the entity is part of the segment.",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"attribute_name": {
+										Type:        schema.TypeString,
+										Computed:    true,
+										Description: "Attribute name.",
+									},
+									"operator": {
+										Type:        schema.TypeString,
+										Computed:    true,
+										Description: "Operator to be used for the evaluation if the entity is part of the segment.",
+									},
+									"values": {
+										Type:        schema.TypeList,
+										Computed:    true,
+										Description: "List of values. Entities matching any of the given values will be considered to be part of the segment.",
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+								},
+							},
 						},
 						"created_time": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Creation time of the environment.",
+							Description: "Creation time of the segment.",
 						},
 						"updated_time": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Last modified time of the environment data.",
+							Description: "Last modified time of the segment data.",
 						},
 						"href": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Environment URL.",
+							Description: "Segment URL.",
 						},
 					},
 				},
@@ -160,7 +192,7 @@ func dataSourceIbmAppConfigEnvironments() *schema.Resource {
 	}
 }
 
-func dataSourceIbmAppConfigEnvironmentsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceIbmAppConfigSegmentsRead(d *schema.ResourceData, meta interface{}) error {
 	guid := d.Get("guid").(string)
 
 	appconfigClient, err := getAppConfigClient(meta, guid)
@@ -168,20 +200,23 @@ func dataSourceIbmAppConfigEnvironmentsRead(d *schema.ResourceData, meta interfa
 		return err
 	}
 
-	options := &appconfigurationv1.ListEnvironmentsOptions{}
-
+	options := &appconfigurationv1.ListSegmentsOptions{}
 	if _, ok := d.GetOk("expand"); ok {
 		options.SetExpand(d.Get("expand").(bool))
 	}
-
 	if _, ok := d.GetOk("tags"); ok {
 		options.SetTags(d.Get("tags").(string))
 	}
-
-	var environmentList *appconfigurationv1.EnvironmentList
+	if _, ok := d.GetOk("includes"); ok {
+		options.SetTags(d.Get("includes").(string))
+	}
+	if _, ok := d.GetOk("sort"); ok {
+		options.SetTags(d.Get("sort").(string))
+	}
+	var segmentsList *appconfigurationv1.SegmentsList
 	var offset int64 = 0
 	var limit int64 = 10
-	finalList := []appconfigurationv1.Environment{}
+	finalList := []appconfigurationv1.Segment{}
 
 	var isLimit bool
 	if _, ok := d.GetOk("limit"); ok {
@@ -195,118 +230,137 @@ func dataSourceIbmAppConfigEnvironmentsRead(d *schema.ResourceData, meta interfa
 	}
 	for {
 		options.SetOffset(offset)
-		result, response, err := appconfigClient.ListEnvironments(options)
-		environmentList = result
+		result, response, err := appconfigClient.ListSegments(options)
+		segmentsList = result
 		if err != nil {
-			log.Printf("[DEBUG] ListEnvironments failed %s\n%s", err, response)
+			log.Printf("[DEBUG] ListSegments failed %s\n%s", err, response)
 			return err
 		}
 		if isLimit {
 			offset = 0
 		} else {
-			offset = dataSourceEnvironmentListGetNext(result.Next)
+			offset = dataSourceSegmentsListGetNext(result.Next)
 		}
-		finalList = append(finalList, result.Environments...)
+		finalList = append(finalList, result.Segments...)
 		if offset == 0 {
 			break
 		}
 	}
 
-	environmentList.Environments = finalList
+	segmentsList.Segments = finalList
 
 	d.SetId(guid)
 
-	if environmentList.Environments != nil {
-		err = d.Set("environments", dataSourceEnvironmentListFlattenEnvironments(environmentList.Environments))
+	if segmentsList.Segments != nil {
+		err = d.Set("segments", dataSourceSegmentsListFlattenSegments(segmentsList.Segments))
 		if err != nil {
-			return fmt.Errorf("error setting environments %s", err)
+			return fmt.Errorf("error setting segments %s", err)
 		}
 	}
-	if environmentList.TotalCount != nil {
-		if err = d.Set("total_count", environmentList.TotalCount); err != nil {
+	if segmentsList.TotalCount != nil {
+		if err = d.Set("total_count", segmentsList.TotalCount); err != nil {
 			return fmt.Errorf("error setting total_count: %s", err)
 		}
 	}
-	if environmentList.Limit != nil {
-		if err = d.Set("limit", environmentList.Limit); err != nil {
+	if segmentsList.Limit != nil {
+		if err = d.Set("limit", segmentsList.Limit); err != nil {
 			return fmt.Errorf("error setting limit: %s", err)
 		}
 	}
-	if environmentList.Offset != nil {
-		if err = d.Set("offset", environmentList.Offset); err != nil {
+	if segmentsList.Offset != nil {
+		if err = d.Set("offset", segmentsList.Offset); err != nil {
 			return fmt.Errorf("error setting offset: %s", err)
 		}
 	}
-	if environmentList.First != nil {
-		err = d.Set("first", dataSourceEnvironmentListFlattenPagination(*environmentList.First))
+	if segmentsList.First != nil {
+		err = d.Set("first", dataSourceSegmentListFlattenPagination(*segmentsList.First))
 		if err != nil {
 			return fmt.Errorf("error setting first %s", err)
 		}
 	}
 
-	if environmentList.Previous != nil {
-		err = d.Set("previous", dataSourceEnvironmentListFlattenPagination(*environmentList.Previous))
+	if segmentsList.Previous != nil {
+		err = d.Set("previous", dataSourceSegmentListFlattenPagination(*segmentsList.Previous))
 		if err != nil {
 			return fmt.Errorf("error setting previous %s", err)
 		}
 	}
 
-	if environmentList.Last != nil {
-		err = d.Set("last", dataSourceEnvironmentListFlattenPagination(*environmentList.Last))
+	if segmentsList.Last != nil {
+		err = d.Set("last", dataSourceSegmentListFlattenPagination(*segmentsList.Last))
 		if err != nil {
 			return fmt.Errorf("error setting last %s", err)
 		}
 	}
-	if environmentList.Next != nil {
-		err = d.Set("next", dataSourceEnvironmentListFlattenPagination(*environmentList.Next))
+	if segmentsList.Next != nil {
+		err = d.Set("next", dataSourceSegmentListFlattenPagination(*segmentsList.Next))
 		if err != nil {
 			return fmt.Errorf("error setting next %s", err)
 		}
 	}
-
 	return nil
 }
 
-func dataSourceEnvironmentListFlattenEnvironments(result []appconfigurationv1.Environment) (environments []map[string]interface{}) {
-	for _, environmentsItem := range result {
-		environments = append(environments, dataSourceEnvironmentListEnvironmentsToMap(environmentsItem))
+func dataSourceSegmentsListFlattenSegments(result []appconfigurationv1.Segment) (segments []map[string]interface{}) {
+	for _, segmentsItem := range result {
+		segments = append(segments, dataSourceSegmentsListSegmentsToMap(segmentsItem))
 	}
 
-	return environments
+	return segments
 }
 
-func dataSourceEnvironmentListEnvironmentsToMap(environmentsItem appconfigurationv1.Environment) (environmentsMap map[string]interface{}) {
-	environmentsMap = map[string]interface{}{}
+func dataSourceSegmentsListSegmentsToMap(segmentsItem appconfigurationv1.Segment) (segmentsMap map[string]interface{}) {
+	segmentsMap = map[string]interface{}{}
 
-	if environmentsItem.Name != nil {
-		environmentsMap["name"] = environmentsItem.Name
+	if segmentsItem.Name != nil {
+		segmentsMap["name"] = segmentsItem.Name
 	}
-	if environmentsItem.EnvironmentID != nil {
-		environmentsMap["environment_id"] = environmentsItem.EnvironmentID
+	if segmentsItem.SegmentID != nil {
+		segmentsMap["segment_id"] = segmentsItem.SegmentID
 	}
-	if environmentsItem.Description != nil {
-		environmentsMap["description"] = environmentsItem.Description
+	if segmentsItem.Description != nil {
+		segmentsMap["description"] = segmentsItem.Description
 	}
-	if environmentsItem.Tags != nil {
-		environmentsMap["tags"] = environmentsItem.Tags
+	if segmentsItem.Tags != nil {
+		segmentsMap["tags"] = segmentsItem.Tags
 	}
-	if environmentsItem.ColorCode != nil {
-		environmentsMap["color_code"] = environmentsItem.ColorCode
+	if segmentsItem.Rules != nil {
+		rulesList := []map[string]interface{}{}
+		for _, rulesItem := range segmentsItem.Rules {
+			rulesList = append(rulesList, dataSourceSegmentsListSegmentsRulesToMap(rulesItem))
+		}
+		segmentsMap["rules"] = rulesList
 	}
-	if environmentsItem.CreatedTime != nil {
-		environmentsMap["created_time"] = environmentsItem.CreatedTime.String()
+	if segmentsItem.CreatedTime != nil {
+		segmentsMap["created_time"] = segmentsItem.CreatedTime.String()
 	}
-	if environmentsItem.UpdatedTime != nil {
-		environmentsMap["updated_time"] = environmentsItem.UpdatedTime.String()
+	if segmentsItem.UpdatedTime != nil {
+		segmentsMap["updated_time"] = segmentsItem.UpdatedTime.String()
 	}
-	if environmentsItem.Href != nil {
-		environmentsMap["href"] = environmentsItem.Href
+	if segmentsItem.Href != nil {
+		segmentsMap["href"] = segmentsItem.Href
 	}
 
-	return environmentsMap
+	return segmentsMap
 }
 
-func dataSourceEnvironmentListGetNext(next interface{}) int64 {
+func dataSourceSegmentsListSegmentsRulesToMap(rulesItem appconfigurationv1.Rule) (rulesMap map[string]interface{}) {
+	rulesMap = map[string]interface{}{}
+
+	if rulesItem.AttributeName != nil {
+		rulesMap["attribute_name"] = rulesItem.AttributeName
+	}
+	if rulesItem.Operator != nil {
+		rulesMap["operator"] = rulesItem.Operator
+	}
+	if rulesItem.Values != nil {
+		rulesMap["values"] = rulesItem.Values
+	}
+
+	return rulesMap
+}
+
+func dataSourceSegmentsListGetNext(next interface{}) int64 {
 	if reflect.ValueOf(next).IsNil() {
 		return 0
 	}
@@ -332,15 +386,15 @@ func dataSourceEnvironmentListGetNext(next interface{}) int64 {
 	return convertedVal
 }
 
-func dataSourceEnvironmentListFlattenPagination(result appconfigurationv1.PageHrefResponse) (finalList []map[string]interface{}) {
+func dataSourceSegmentListFlattenPagination(result appconfigurationv1.PageHrefResponse) (finalList []map[string]interface{}) {
 	finalList = []map[string]interface{}{}
-	finalMap := dataSourceEnvironmentListURLToMap(result)
+	finalMap := dataSourceSegmentListURLToMap(result)
 	finalList = append(finalList, finalMap)
 
 	return finalList
 }
 
-func dataSourceEnvironmentListURLToMap(urlItem appconfigurationv1.PageHrefResponse) (urlMap map[string]interface{}) {
+func dataSourceSegmentListURLToMap(urlItem appconfigurationv1.PageHrefResponse) (urlMap map[string]interface{}) {
 	urlMap = map[string]interface{}{}
 
 	if urlItem.Href != nil {
