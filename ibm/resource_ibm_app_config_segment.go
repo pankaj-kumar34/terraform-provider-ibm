@@ -27,43 +27,43 @@ func resourceIbmAppConfigSegment() *schema.Resource {
 				Required:    true,
 				Description: "GUID of the App Configuration service. Get it from the service instance credentials section of the dashboard.",
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Segment name.",
 			},
-			"segment_id": &schema.Schema{
+			"segment_id": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Segment id.",
 			},
-			"description": &schema.Schema{
+			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Segment description.",
 			},
-			"tags": &schema.Schema{
+			"tags": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Tags associated with the segments.",
 			},
-			"rules": &schema.Schema{
+			"rules": {
 				Type:        schema.TypeList,
 				Required:    true,
 				Description: "List of rules that determine if the entity is part of the segment.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"attribute_name": &schema.Schema{
+						"attribute_name": {
 							Type:        schema.TypeString,
 							Required:    true,
 							Description: "Attribute name.",
 						},
-						"operator": &schema.Schema{
+						"operator": {
 							Type:        schema.TypeString,
 							Required:    true,
 							Description: "Operator to be used for the evaluation if the entity is part of the segment.",
 						},
-						"values": &schema.Schema{
+						"values": {
 							Type:        schema.TypeList,
 							Required:    true,
 							Description: "List of values. Entities matching any of the given values will be considered to be part of the segment.",
@@ -72,17 +72,17 @@ func resourceIbmAppConfigSegment() *schema.Resource {
 					},
 				},
 			},
-			"created_time": &schema.Schema{
+			"created_time": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Creation time of the segment.",
 			},
-			"updated_time": &schema.Schema{
+			"updated_time": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Last modified time of the segment data.",
 			},
-			"href": &schema.Schema{
+			"href": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Segment URL.",
@@ -163,22 +163,22 @@ func resourceIbmAppConfigSegmentRead(d *schema.ResourceData, meta interface{}) e
 
 	if result.Name != nil {
 		if err = d.Set("name", result.Name); err != nil {
-			return fmt.Errorf("Error setting name: %s", err)
+			return fmt.Errorf("error setting name: %s", err)
 		}
 	}
 	if result.SegmentID != nil {
 		if err = d.Set("segment_id", result.SegmentID); err != nil {
-			return fmt.Errorf("Error setting segment_id: %s", err)
+			return fmt.Errorf("error setting segment_id: %s", err)
 		}
 	}
 	if result.Description != nil {
 		if err = d.Set("description", result.Description); err != nil {
-			return fmt.Errorf("Error setting description: %s", err)
+			return fmt.Errorf("error setting description: %s", err)
 		}
 	}
 	if result.Tags != nil {
 		if err = d.Set("tags", result.Tags); err != nil {
-			return fmt.Errorf("Error setting tags: %s", err)
+			return fmt.Errorf("error setting tags: %s", err)
 		}
 	}
 
@@ -189,22 +189,22 @@ func resourceIbmAppConfigSegmentRead(d *schema.ResourceData, meta interface{}) e
 			rules = append(rules, rulesItemMap)
 		}
 		if err = d.Set("rules", rules); err != nil {
-			return fmt.Errorf("Error setting rules: %s", err)
+			return fmt.Errorf("error setting rules: %s", err)
 		}
 	}
 	if result.CreatedTime != nil {
 		if err = d.Set("created_time", result.CreatedTime.String()); err != nil {
-			return fmt.Errorf("Error setting created_time: %s", err)
+			return fmt.Errorf("error setting created_time: %s", err)
 		}
 	}
 	if result.UpdatedTime != nil {
 		if err = d.Set("updated_time", result.UpdatedTime.String()); err != nil {
-			return fmt.Errorf("Error setting updated_time: %s", err)
+			return fmt.Errorf("error setting updated_time: %s", err)
 		}
 	}
 	if result.Href != nil {
 		if err = d.Set("href", result.Href); err != nil {
-			return fmt.Errorf("Error setting href: %s", err)
+			return fmt.Errorf("error setting href: %s", err)
 		}
 	}
 
