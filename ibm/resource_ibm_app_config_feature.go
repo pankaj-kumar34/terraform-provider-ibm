@@ -46,7 +46,7 @@ func resourceIbmIbmAppConfigFeature() *schema.Resource {
 			"type": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: InvokeValidator("ibm_app_config_feature", "type"),
+				ValidateFunc: InvokeValidator("ibm_app_config_type", "type"),
 				Description:  "Type of the feature (BOOLEAN, STRING, NUMERIC).",
 			},
 			"enabled_value": {
@@ -146,6 +146,163 @@ func resourceIbmIbmAppConfigFeature() *schema.Resource {
 	}
 }
 
+// validator
+func resourceIbmAppConfigTypeValidator() *ResourceValidator {
+	validateSchema := make([]ValidateSchema, 1)
+	validateSchema = append(validateSchema,
+		ValidateSchema{
+			Identifier:                 "type",
+			ValidateFunctionIdentifier: ValidateAllowedStringValue,
+			Type:                       TypeString,
+			Required:                   true,
+			AllowedValues:              "BOOLEAN, NUMERIC, STRING",
+		},
+	)
+
+	resourceValidator := ResourceValidator{ResourceName: "ibm_app_config_type", Schema: validateSchema}
+	return &resourceValidator
+}
+
+// inputs
+func resourceIbmAppConfigMapToCollections(collectionMap map[string]interface{}) appconfigurationv1.CollectionRef {
+	collectionRef := appconfigurationv1.CollectionRef{}
+	collectionRef.CollectionID = core.StringPtr(collectionMap["collection_id"].(string))
+
+	return collectionRef
+}
+
+func resourceIbmAppConfigMapToSegmentRule(d *schema.ResourceData, segmentRuleMap map[string]interface{}) (appconfigurationv1.SegmentRule, error) {
+	segmentRule := appconfigurationv1.SegmentRule{}
+
+	rules := []appconfigurationv1.TargetSegments{}
+	for _, rulesItem := range segmentRuleMap["rules"].([]interface{}) {
+		rulesItemModel := resourceIbmAppConfigMapToRule(rulesItem.(map[string]interface{}))
+		rules = append(rules, rulesItemModel)
+	}
+	segmentRule.Rules = rules
+
+	segmentRule.Order = core.Int64Ptr(int64(segmentRuleMap["order"].(int)))
+
+	ruleValue := segmentRuleMap["value"].(string)
+	switch d.Get("type").(string) {
+	case "STRING":
+		segmentRule.Value = ruleValue
+	case "NUMERIC":
+		v, err := strconv.ParseFloat(ruleValue, 64)
+		if err != nil {
+			return segmentRule, fmt.Errorf("'value' parameter in 'segment_rules' has wrong value: %s", err)
+		}
+		segmentRule.Value = v
+	case "BOOLEAN":
+		if ruleValue == "false" {
+			segmentRule.Value = false
+		} else if ruleValue == "true" {
+			segmentRule.Value = true
+		} else {
+			return segmentRule, fmt.Errorf("'value' parameter in 'segment_rules' has wrong value")
+		}
+	}
+
+	return segmentRule, nil
+}
+
+func resourceIbmAppConfigMapToRule(rules map[string]interface{}) appconfigurationv1.TargetSegments {
+	rule := appconfigurationv1.TargetSegments{}
+
+	segments := []string{}
+	for _, segmentsItem := range rules["segments"].([]interface{}) {
+		segments = append(segments, segmentsItem.(string))
+	}
+	rule.Segments = segments
+
+	return rule
+}
+
+// segments
+func getAppConfiigSegmentRuleInput(d *schema.ResourceData) ([]appconfigurationv1.SegmentRule, error) {
+	var segmentRules []appconfigurationv1.SegmentRule
+	for _, e := range d.Get("segment_rules").([]interface{}) {
+		value := e.(map[string]interface{})
+		segmentRulesItem, err := resourceIbmAppConfigMapToSegmentRule(d, value)
+		if err != nil {
+			return nil, err
+		}
+		segmentRules = append(segmentRules, segmentRulesItem)
+	}
+	return segmentRules, nil
+}
+
+// collections
+func getAppConfiigCollectionInput(d *schema.ResourceData) []appconfigurationv1.CollectionRef {
+	var collections []appconfigurationv1.CollectionRef
+	for _, e := range d.Get("collections").([]interface{}) {
+		value := e.(map[string]interface{})
+		collectionsItem := resourceIbmAppConfigMapToCollections(value)
+		collections = append(collections, collectionsItem)
+	}
+	return collections
+}
+
+// output
+func resourceIbmAppConfigSegmentRuleToMap(segmentRule appconfigurationv1.SegmentRule) map[string]interface{} {
+	segmentRuleMap := map[string]interface{}{}
+
+	rules := []map[string]interface{}{}
+	for _, rulesItem := range segmentRule.Rules {
+		rulesItemMap := resourceIbmAppConfigRuleToMap(rulesItem)
+		rules = append(rules, rulesItemMap)
+	}
+
+	segmentRuleMap["rules"] = rules
+	segmentRuleMap["order"] = intValue(segmentRule.Order)
+
+	segmentValue := segmentRule.Value
+	switch segmentValue.(interface{}).(type) {
+	case string:
+		segmentRuleMap["value"] = segmentValue.(string)
+	case float64:
+		segmentRuleMap["value"] = fmt.Sprintf("%v", segmentValue)
+	case bool:
+		segmentRuleMap["value"] = strconv.FormatBool(segmentValue.(bool))
+	}
+
+	return segmentRuleMap
+}
+
+func resourceIbmAppConfigRuleToMap(rule appconfigurationv1.TargetSegments) map[string]interface{} {
+	ruleMap := map[string]interface{}{}
+	ruleMap["segments"] = rule.Segments
+	return ruleMap
+}
+
+func resourceIbmAppConfigCollectionToMap(collectionRef appconfigurationv1.CollectionRef) map[string]interface{} {
+	collectionRefMap := map[string]interface{}{}
+	collectionRefMap["collection_id"] = collectionRef.CollectionID
+	collectionRefMap["name"] = collectionRef.Name
+	return collectionRefMap
+}
+
+// segment response
+func getAppConfigSegmentResponse(result *appconfigurationv1.Feature) []map[string]interface{} {
+	segmentRules := []map[string]interface{}{}
+	for _, segmentRulesItem := range result.SegmentRules {
+		segmentRulesItemMap := resourceIbmAppConfigSegmentRuleToMap(segmentRulesItem)
+		segmentRules = append(segmentRules, segmentRulesItemMap)
+	}
+	return segmentRules
+}
+
+// collection response
+func getAppConfigCollectionResponse(result *appconfigurationv1.Feature) []map[string]interface{} {
+	segmentRules := []map[string]interface{}{}
+	for _, segmentRulesItem := range result.SegmentRules {
+		segmentRulesItemMap := resourceIbmAppConfigSegmentRuleToMap(segmentRulesItem)
+		segmentRules = append(segmentRules, segmentRulesItemMap)
+	}
+	return segmentRules
+}
+
+// create
 func resourceIbmIbmAppConfigFeatureCreate(d *schema.ResourceData, meta interface{}) error {
 	guid := d.Get("guid").(string)
 	appconfigClient, err := getAppConfigClient(meta, guid)
@@ -166,39 +323,29 @@ func resourceIbmIbmAppConfigFeatureCreate(d *schema.ResourceData, meta interface
 	if _, ok := d.GetOk("tags"); ok {
 		options.SetTags(d.Get("tags").(string))
 	}
-
-	if _, ok := d.GetOk("segment_rules"); ok {
-		var segmentRules []appconfigurationv1.SegmentRule
-		for _, e := range d.Get("segment_rules").([]interface{}) {
-			value := e.(map[string]interface{})
-			segmentRulesItem, err := resourceIbmAppConfigFeatureMapToSegmentRule(d, value)
-			if err != nil {
-				return err
-			}
-			segmentRules = append(segmentRules, segmentRulesItem)
-		}
-		options.SetSegmentRules(segmentRules)
-	}
 	if _, ok := d.GetOk("collections"); ok {
-		var collections []appconfigurationv1.CollectionRef
-		for _, e := range d.Get("collections").([]interface{}) {
-			value := e.(map[string]interface{})
-			collectionsItem := resourceIbmAppConfigFeatureMapToCollectionRef(value)
-			collections = append(collections, collectionsItem)
+		data := getAppConfiigCollectionInput(d)
+		options.SetCollections(data)
+	}
+	if _, ok := d.GetOk("segment_rules"); ok {
+		data, err := getAppConfiigSegmentRuleInput(d)
+		if err != nil {
+			return err
 		}
-		options.SetCollections(collections)
+		options.SetSegmentRules(data)
 	}
 
-	feature, response, err := appconfigClient.CreateFeature(options)
+	result, response, err := appconfigClient.CreateFeature(options)
 
 	if err != nil {
 		log.Printf("CreateFeature failed %s\n%s", err, response)
 		return err
 	}
-	d.SetId(fmt.Sprintf("%s/%s/%s", guid, *options.EnvironmentID, *feature.FeatureID))
+	d.SetId(fmt.Sprintf("%s/%s/%s", guid, *options.EnvironmentID, *result.FeatureID))
 	return resourceIbmIbmAppConfigFeatureRead(d, meta)
 }
 
+// update
 func resourceIbmIbmAppConfigFeatureUpdate(d *schema.ResourceData, meta interface{}) error {
 	parts, err := idParts(d.Id())
 	if err != nil {
@@ -224,26 +371,16 @@ func resourceIbmIbmAppConfigFeatureUpdate(d *schema.ResourceData, meta interface
 		if _, ok := d.GetOk("tags"); ok {
 			options.SetTags(d.Get("tags").(string))
 		}
-		if _, ok := d.GetOk("segment_rules"); ok {
-			var segmentRules []appconfigurationv1.SegmentRule
-			for _, e := range d.Get("segment_rules").([]interface{}) {
-				value := e.(map[string]interface{})
-				segmentRulesItem, err := resourceIbmAppConfigFeatureMapToSegmentRule(d, value)
-				if err != nil {
-					return err
-				}
-				segmentRules = append(segmentRules, segmentRulesItem)
-			}
-			options.SetSegmentRules(segmentRules)
-		}
 		if _, ok := d.GetOk("collections"); ok {
-			var collections []appconfigurationv1.CollectionRef
-			for _, e := range d.Get("collections").([]interface{}) {
-				value := e.(map[string]interface{})
-				collectionsItem := resourceIbmAppConfigFeatureMapToCollectionRef(value)
-				collections = append(collections, collectionsItem)
+			data := getAppConfiigCollectionInput(d)
+			options.SetCollections(data)
+		}
+		if _, ok := d.GetOk("segment_rules"); ok {
+			data, err := getAppConfiigSegmentRuleInput(d)
+			if err != nil {
+				return err
 			}
-			options.SetCollections(collections)
+			options.SetSegmentRules(data)
 		}
 
 		_, response, err := appconfigClient.UpdateFeature(options)
@@ -256,6 +393,7 @@ func resourceIbmIbmAppConfigFeatureUpdate(d *schema.ResourceData, meta interface
 	return nil
 }
 
+// read
 func resourceIbmIbmAppConfigFeatureRead(d *schema.ResourceData, meta interface{}) error {
 	parts, err := idParts(d.Id())
 	if err != nil {
@@ -303,27 +441,6 @@ func resourceIbmIbmAppConfigFeatureRead(d *schema.ResourceData, meta interface{}
 			return fmt.Errorf("error setting tags: %s", err)
 		}
 	}
-
-	if result.SegmentRules != nil {
-		segmentRules := []map[string]interface{}{}
-		for _, segmentRulesItem := range result.SegmentRules {
-			segmentRulesItemMap := resourceIbmAppConfigFeatureSegmentRuleToMap(segmentRulesItem)
-			segmentRules = append(segmentRules, segmentRulesItemMap)
-		}
-		if err = d.Set("segment_rules", segmentRules); err != nil {
-			return fmt.Errorf("error setting segment_rules: %s", err)
-		}
-	}
-	if result.Collections != nil {
-		collections := []map[string]interface{}{}
-		for _, collectionsItem := range result.Collections {
-			collectionsItemMap := resourceIbmAppConfigFeatureCollectionRefToMap(collectionsItem)
-			collections = append(collections, collectionsItemMap)
-		}
-		if err = d.Set("collections", collections); err != nil {
-			return fmt.Errorf("error setting collections: %s", err)
-		}
-	}
 	if result.SegmentExists != nil {
 		if err = d.Set("segment_exists", result.SegmentExists); err != nil {
 			return fmt.Errorf("error setting segment_exists: %s", err)
@@ -349,7 +466,6 @@ func resourceIbmIbmAppConfigFeatureRead(d *schema.ResourceData, meta interface{}
 			return fmt.Errorf("error setting enabled: %s", err)
 		}
 	}
-
 	if result.EnabledValue != nil {
 		enabledValue := result.EnabledValue
 
@@ -362,7 +478,6 @@ func resourceIbmIbmAppConfigFeatureRead(d *schema.ResourceData, meta interface{}
 			d.Set("enabled_value", strconv.FormatBool(enabledValue.(bool)))
 		}
 	}
-
 	if result.DisabledValue != nil {
 		disabledValue := result.DisabledValue
 
@@ -375,9 +490,22 @@ func resourceIbmIbmAppConfigFeatureRead(d *schema.ResourceData, meta interface{}
 			d.Set("disabled_value", strconv.FormatBool(disabledValue.(bool)))
 		}
 	}
+	if result.SegmentRules != nil {
+		segmentRules := getAppConfigSegmentResponse(result)
+		if err = d.Set("segment_rules", segmentRules); err != nil {
+			return fmt.Errorf("error setting segment_rules: %s", err)
+		}
+	}
+	if result.Collections != nil {
+		collections := getAppConfigCollectionResponse(result)
+		if err = d.Set("collections", collections); err != nil {
+			return fmt.Errorf("error setting collections: %s", err)
+		}
+	}
 	return nil
 }
 
+// delete
 func resourceIbmIbmAppConfigFeatureDelete(d *schema.ResourceData, meta interface{}) error {
 	parts, err := idParts(d.Id())
 	if err != nil {
@@ -404,114 +532,4 @@ func resourceIbmIbmAppConfigFeatureDelete(d *schema.ResourceData, meta interface
 	d.SetId("")
 
 	return nil
-}
-
-func resourceIbmAppConfigFeatureValidator() *ResourceValidator {
-	validateSchema := make([]ValidateSchema, 1)
-	validateSchema = append(validateSchema,
-		ValidateSchema{
-			Identifier:                 "type",
-			ValidateFunctionIdentifier: ValidateAllowedStringValue,
-			Type:                       TypeString,
-			Required:                   true,
-			AllowedValues:              "BOOLEAN, NUMERIC, STRING",
-		},
-	)
-
-	resourceValidator := ResourceValidator{ResourceName: "ibm_app_config_feature", Schema: validateSchema}
-	return &resourceValidator
-}
-
-// output
-func resourceIbmAppConfigFeatureSegmentRuleToMap(segmentRule appconfigurationv1.SegmentRule) map[string]interface{} {
-	segmentRuleMap := map[string]interface{}{}
-
-	rules := []map[string]interface{}{}
-	for _, rulesItem := range segmentRule.Rules {
-		rulesItemMap := resourceIbmAppConfigFeatureRuleToMap(rulesItem)
-		rules = append(rules, rulesItemMap)
-	}
-
-	segmentRuleMap["rules"] = rules
-	segmentRuleMap["order"] = intValue(segmentRule.Order)
-
-	segmentValue := segmentRule.Value
-	switch segmentValue.(interface{}).(type) {
-	case string:
-		segmentRuleMap["value"] = segmentValue.(string)
-	case float64:
-		segmentRuleMap["value"] = fmt.Sprintf("%v", segmentValue)
-	case bool:
-		segmentRuleMap["value"] = strconv.FormatBool(segmentValue.(bool))
-	}
-
-	return segmentRuleMap
-}
-
-func resourceIbmAppConfigFeatureRuleToMap(rule appconfigurationv1.TargetSegments) map[string]interface{} {
-	ruleMap := map[string]interface{}{}
-	ruleMap["segments"] = rule.Segments
-	return ruleMap
-}
-
-func resourceIbmAppConfigFeatureCollectionRefToMap(collectionRef appconfigurationv1.CollectionRef) map[string]interface{} {
-	collectionRefMap := map[string]interface{}{}
-	collectionRefMap["collection_id"] = collectionRef.CollectionID
-	collectionRefMap["name"] = collectionRef.Name
-	return collectionRefMap
-}
-
-// input
-func resourceIbmAppConfigFeatureMapToSegmentRule(d *schema.ResourceData, segmentRuleMap map[string]interface{}) (appconfigurationv1.SegmentRule, error) {
-	segmentRule := appconfigurationv1.SegmentRule{}
-
-	rules := []appconfigurationv1.TargetSegments{}
-	for _, rulesItem := range segmentRuleMap["rules"].([]interface{}) {
-		rulesItemModel := resourceIbmAppConfigFeatureMapToRule(rulesItem.(map[string]interface{}))
-		rules = append(rules, rulesItemModel)
-	}
-	segmentRule.Rules = rules
-
-	segmentRule.Order = core.Int64Ptr(int64(segmentRuleMap["order"].(int)))
-
-	ruleValue := segmentRuleMap["value"].(string)
-	switch d.Get("type").(string) {
-	case "STRING":
-		segmentRule.Value = ruleValue
-	case "NUMERIC":
-		v, err := strconv.ParseFloat(ruleValue, 64)
-		if err != nil {
-			return segmentRule, fmt.Errorf("'value' parameter in 'segment_rules' has wrong value: %s", err)
-		}
-		segmentRule.Value = v
-	case "BOOLEAN":
-		if ruleValue == "false" {
-			segmentRule.Value = false
-		} else if ruleValue == "true" {
-			segmentRule.Value = true
-		} else {
-			return segmentRule, fmt.Errorf("'value' parameter in 'segment_rules' has wrong value")
-		}
-	}
-
-	return segmentRule, nil
-}
-
-func resourceIbmAppConfigFeatureMapToRule(ruleMap map[string]interface{}) appconfigurationv1.TargetSegments {
-	rule := appconfigurationv1.TargetSegments{}
-
-	segments := []string{}
-	for _, segmentsItem := range ruleMap["segments"].([]interface{}) {
-		segments = append(segments, segmentsItem.(string))
-	}
-	rule.Segments = segments
-
-	return rule
-}
-
-func resourceIbmAppConfigFeatureMapToCollectionRef(collectionRefMap map[string]interface{}) appconfigurationv1.CollectionRef {
-	collectionRef := appconfigurationv1.CollectionRef{}
-	collectionRef.CollectionID = core.StringPtr(collectionRefMap["collection_id"].(string))
-
-	return collectionRef
 }

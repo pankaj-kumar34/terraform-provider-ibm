@@ -646,7 +646,7 @@ func Validator() ValidatorDict {
 				"ibm_cis_certificate_order":             resourceIBMCISCertificateOrderValidator(),
 				"ibm_cr_namespace":                      resourceIBMCrNamespaceValidator(),
 				"ibm_tg_gateway":                        resourceIBMTGValidator(),
-				"ibm_app_config_feature":                resourceIbmAppConfigFeatureValidator(),
+				"ibm_app_config_type":                   resourceIbmAppConfigTypeValidator(),
 				"ibm_tg_connection":                     resourceIBMTransitGatewayConnectionValidator(),
 				"ibm_dl_virtual_connection":             resourceIBMdlGatewayVCValidator(),
 				"ibm_dl_gateway":                        resourceIBMDLGatewayValidator(),
