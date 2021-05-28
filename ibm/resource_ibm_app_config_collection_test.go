@@ -63,7 +63,7 @@ func testAccCheckIbmAppConfigCollectionConfigBasic(instanceName, name, collectio
 			 name     = "%s"
 			 location = "us-south"
 			 service  = "apprapp"
-			 plan     = "standard"
+			 plan     = "lite"
 		 }
 		 resource "ibm_app_config_collection" "app_config_collection_resource1" {
 			 name          		= "%s"

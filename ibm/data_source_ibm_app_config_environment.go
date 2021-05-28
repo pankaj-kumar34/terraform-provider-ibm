@@ -33,6 +33,12 @@ func dataSourceIbmAppConfigEnvironment() *schema.Resource {
 				Optional:    true,
 				Description: "If set to `true`, returns expanded view of the resource details.",
 			},
+			"includes": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Include feature and property details in the response.",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"name": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -52,6 +58,44 @@ func dataSourceIbmAppConfigEnvironment() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Color code to distinguish the environment. The Hex code for the color. For example `#FF0000` for `red`.",
+			},
+			"features": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "List of Features associated with the environment.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"feature_id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Feature id.",
+						},
+						"name": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Feature name.",
+						},
+					},
+				},
+			},
+			"properties": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "List of properties associated with the environment.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"property_id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Property id.",
+						},
+						"name": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Property name.",
+						},
+					},
+				},
 			},
 			"created_time": {
 				Type:        schema.TypeString,
@@ -86,6 +130,13 @@ func dataSourceIbmAppConfigEnvironmentRead(d *schema.ResourceData, meta interfac
 	if _, ok := d.GetOk("expand"); ok {
 		options.SetExpand(d.Get("expand").(bool))
 	}
+	if _, ok := d.GetOk("includes"); ok {
+		includes := []string{}
+		for _, item := range d.Get("includes").([]interface{}) {
+			includes = append(includes, item.(string))
+		}
+		options.SetInclude(includes)
+	}
 	result, response, err := appconfigClient.GetEnvironment(options)
 	if err != nil {
 		log.Printf("GetEnvironment failed %s\n%s", err, response)
@@ -112,6 +163,19 @@ func dataSourceIbmAppConfigEnvironmentRead(d *schema.ResourceData, meta interfac
 	if result.ColorCode != nil {
 		if err = d.Set("color_code", result.ColorCode); err != nil {
 			return fmt.Errorf("error setting color_code: %s", err)
+		}
+	}
+	if result.Features != nil {
+		err = d.Set("features", dataSourceAppConfigFlattenFeatures(result.Features))
+		if err != nil {
+			return fmt.Errorf("error setting features %s", err)
+		}
+	}
+
+	if result.Properties != nil {
+		err = d.Set("properties", dataSourceAppConfigFlattenProperties(result.Properties))
+		if err != nil {
+			return fmt.Errorf("error setting properties %s", err)
 		}
 	}
 	if result.CreatedTime != nil {

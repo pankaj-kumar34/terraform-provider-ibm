@@ -6,7 +6,6 @@ package ibm
 import (
 	"fmt"
 	"log"
-	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -223,110 +222,25 @@ func dataSourceIbmAppConfigFeatureRead(d *schema.ResourceData, meta interface{})
 	}
 
 	if result.EnabledValue != nil {
-		enabledValue := result.EnabledValue
-
-		switch enabledValue.(interface{}).(type) {
-		case string:
-			d.Set("enabled_value", enabledValue.(string))
-		case float64:
-			d.Set("enabled_value", fmt.Sprintf("%v", enabledValue))
-		case bool:
-			d.Set("enabled_value", strconv.FormatBool(enabledValue.(bool)))
-		}
+		d.Set("enabled_value", getAppConfigFormattedTypeValue(result.EnabledValue))
 	}
 
 	if result.DisabledValue != nil {
-		disabledValue := result.DisabledValue
-
-		switch disabledValue.(interface{}).(type) {
-		case string:
-			d.Set("disabled_value", disabledValue.(string))
-		case float64:
-			d.Set("disabled_value", fmt.Sprintf("%v", disabledValue))
-		case bool:
-			d.Set("disabled_value", strconv.FormatBool(disabledValue.(bool)))
-		}
+		d.Set("disabled_value", getAppConfigFormattedTypeValue(result.DisabledValue))
 	}
 
 	if result.SegmentRules != nil {
-		err = d.Set("segment_rules", dataSourceFeatureFlattenSegmentRules(result.SegmentRules))
+		err = d.Set("segment_rules", getAppConfigSegmentResponse(result.SegmentRules))
 		if err != nil {
 			return fmt.Errorf("error setting segment_rules %s", err)
 		}
 	}
 
 	if result.Collections != nil {
-		err = d.Set("collections", dataSourceFeatureFlattenCollections(result.Collections))
+		err = d.Set("collections", getAppConfigCollectionResponse(result.Collections))
 		if err != nil {
 			return fmt.Errorf("error setting collections %s", err)
 		}
 	}
 	return nil
-}
-
-func dataSourceFeatureFlattenSegmentRules(result []appconfigurationv1.SegmentRule) (segmentRules []map[string]interface{}) {
-	for _, segmentRulesItem := range result {
-		segmentRules = append(segmentRules, dataSourceFeatureSegmentRulesToMap(segmentRulesItem))
-	}
-
-	return segmentRules
-}
-
-func dataSourceFeatureSegmentRulesToMap(segmentRulesItem appconfigurationv1.SegmentRule) (segmentRulesMap map[string]interface{}) {
-	segmentRulesMap = map[string]interface{}{}
-
-	if segmentRulesItem.Rules != nil {
-		rulesList := []map[string]interface{}{}
-		for _, rulesItem := range segmentRulesItem.Rules {
-			rulesList = append(rulesList, dataSourceFeatureSegmentRulesRulesToMap(rulesItem))
-		}
-		segmentRulesMap["rules"] = rulesList
-	}
-	if segmentRulesItem.Value != nil {
-		segmentValue := segmentRulesItem.Value
-		switch segmentValue.(interface{}).(type) {
-		case string:
-			segmentRulesMap["value"] = segmentValue.(string)
-		case float64:
-			segmentRulesMap["value"] = fmt.Sprintf("%v", segmentValue)
-		case bool:
-			segmentRulesMap["value"] = strconv.FormatBool(segmentValue.(bool))
-		}
-	}
-	if segmentRulesItem.Order != nil {
-		segmentRulesMap["order"] = segmentRulesItem.Order
-	}
-
-	return segmentRulesMap
-}
-
-func dataSourceFeatureSegmentRulesRulesToMap(rulesItem appconfigurationv1.TargetSegments) (rulesMap map[string]interface{}) {
-	rulesMap = map[string]interface{}{}
-
-	if rulesItem.Segments != nil {
-		rulesMap["segments"] = rulesItem.Segments
-	}
-
-	return rulesMap
-}
-
-func dataSourceFeatureFlattenCollections(result []appconfigurationv1.CollectionRef) (collections []map[string]interface{}) {
-	for _, collectionsItem := range result {
-		collections = append(collections, dataSourceFeatureCollectionsToMap(collectionsItem))
-	}
-
-	return collections
-}
-
-func dataSourceFeatureCollectionsToMap(collectionsItem appconfigurationv1.CollectionRef) (collectionsMap map[string]interface{}) {
-	collectionsMap = map[string]interface{}{}
-
-	if collectionsItem.CollectionID != nil {
-		collectionsMap["collection_id"] = collectionsItem.CollectionID
-	}
-	if collectionsItem.Name != nil {
-		collectionsMap["name"] = collectionsItem.Name
-	}
-
-	return collectionsMap
 }

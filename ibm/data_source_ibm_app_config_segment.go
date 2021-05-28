@@ -75,6 +75,44 @@ func dataSourceIbmAppConfigSegment() *schema.Resource {
 					},
 				},
 			},
+			"features": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "List of Features associated with the environment.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"feature_id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Feature id.",
+						},
+						"name": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Feature name.",
+						},
+					},
+				},
+			},
+			"properties": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "List of properties associated with the environment.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"property_id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Property id.",
+						},
+						"name": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Property name.",
+						},
+					},
+				},
+			},
 			"created_time": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -137,7 +175,19 @@ func dataSourceIbmAppConfigSegmentRead(d *schema.ResourceData, meta interface{})
 			return fmt.Errorf("error setting tags: %s", err)
 		}
 	}
+	if result.Features != nil {
+		err = d.Set("features", dataSourceAppConfigFlattenFeatures(result.Features))
+		if err != nil {
+			return fmt.Errorf("error setting features %s", err)
+		}
+	}
 
+	if result.Properties != nil {
+		err = d.Set("properties", dataSourceAppConfigFlattenProperties(result.Properties))
+		if err != nil {
+			return fmt.Errorf("error setting properties %s", err)
+		}
+	}
 	if result.Rules != nil {
 		err = d.Set("rules", dataSourceSegmentFlattenRules(result.Rules))
 		if err != nil {

@@ -6,9 +6,6 @@ package ibm
 import (
 	"fmt"
 	"log"
-	"net/url"
-	"reflect"
-	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -105,6 +102,44 @@ func dataSourceIbmAppConfigSegments() *schema.Resource {
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
+									},
+								},
+							},
+						},
+						"features": {
+							Type:        schema.TypeList,
+							Computed:    true,
+							Description: "List of Features associated with the environment.",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"feature_id": {
+										Type:        schema.TypeString,
+										Computed:    true,
+										Description: "Feature id.",
+									},
+									"name": {
+										Type:        schema.TypeString,
+										Computed:    true,
+										Description: "Feature name.",
+									},
+								},
+							},
+						},
+						"properties": {
+							Type:        schema.TypeList,
+							Computed:    true,
+							Description: "List of properties associated with the environment.",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"property_id": {
+										Type:        schema.TypeString,
+										Computed:    true,
+										Description: "Property id.",
+									},
+									"name": {
+										Type:        schema.TypeString,
+										Computed:    true,
+										Description: "Property name.",
 									},
 								},
 							},
@@ -239,7 +274,7 @@ func dataSourceIbmAppConfigSegmentsRead(d *schema.ResourceData, meta interface{}
 		if isLimit {
 			offset = 0
 		} else {
-			offset = dataSourceSegmentsListGetNext(result.Next)
+			offset = dataSourceAppConnfigGetNext(result.Next)
 		}
 		finalList = append(finalList, result.Segments...)
 		if offset == 0 {
@@ -273,27 +308,27 @@ func dataSourceIbmAppConfigSegmentsRead(d *schema.ResourceData, meta interface{}
 		}
 	}
 	if segmentsList.First != nil {
-		err = d.Set("first", dataSourceSegmentListFlattenPagination(*segmentsList.First))
+		err = d.Set("first", dataSourceAppConfigFlattenPagination(*segmentsList.First))
 		if err != nil {
 			return fmt.Errorf("error setting first %s", err)
 		}
 	}
 
 	if segmentsList.Previous != nil {
-		err = d.Set("previous", dataSourceSegmentListFlattenPagination(*segmentsList.Previous))
+		err = d.Set("previous", dataSourceAppConfigFlattenPagination(*segmentsList.Previous))
 		if err != nil {
 			return fmt.Errorf("error setting previous %s", err)
 		}
 	}
 
 	if segmentsList.Last != nil {
-		err = d.Set("last", dataSourceSegmentListFlattenPagination(*segmentsList.Last))
+		err = d.Set("last", dataSourceAppConfigFlattenPagination(*segmentsList.Last))
 		if err != nil {
 			return fmt.Errorf("error setting last %s", err)
 		}
 	}
 	if segmentsList.Next != nil {
-		err = d.Set("next", dataSourceSegmentListFlattenPagination(*segmentsList.Next))
+		err = d.Set("next", dataSourceAppConfigFlattenPagination(*segmentsList.Next))
 		if err != nil {
 			return fmt.Errorf("error setting next %s", err)
 		}
@@ -325,11 +360,13 @@ func dataSourceSegmentsListSegmentsToMap(segmentsItem appconfigurationv1.Segment
 		segmentsMap["tags"] = segmentsItem.Tags
 	}
 	if segmentsItem.Rules != nil {
-		rulesList := []map[string]interface{}{}
-		for _, rulesItem := range segmentsItem.Rules {
-			rulesList = append(rulesList, dataSourceSegmentsListSegmentsRulesToMap(rulesItem))
-		}
-		segmentsMap["rules"] = rulesList
+		segmentsMap["rules"] = dataSourceSegmentFlattenRules(segmentsItem.Rules)
+	}
+	if segmentsItem.Features != nil {
+		segmentsMap["features"] = dataSourceAppConfigFlattenFeatures(segmentsItem.Features)
+	}
+	if segmentsItem.Properties != nil {
+		segmentsMap["properties"] = dataSourceAppConfigFlattenProperties(segmentsItem.Properties)
 	}
 	if segmentsItem.CreatedTime != nil {
 		segmentsMap["created_time"] = segmentsItem.CreatedTime.String()
@@ -358,48 +395,4 @@ func dataSourceSegmentsListSegmentsRulesToMap(rulesItem appconfigurationv1.Rule)
 	}
 
 	return rulesMap
-}
-
-func dataSourceSegmentsListGetNext(next interface{}) int64 {
-	if reflect.ValueOf(next).IsNil() {
-		return 0
-	}
-
-	u, err := url.Parse(reflect.ValueOf(next).Elem().FieldByName("Href").Elem().String())
-	if err != nil {
-		return 0
-	}
-
-	q := u.Query()
-	var page string
-
-	if q.Get("start") != "" {
-		page = q.Get("start")
-	} else if q.Get("offset") != "" {
-		page = q.Get("offset")
-	}
-
-	convertedVal, err := strconv.ParseInt(page, 10, 64)
-	if err != nil {
-		return 0
-	}
-	return convertedVal
-}
-
-func dataSourceSegmentListFlattenPagination(result appconfigurationv1.PageHrefResponse) (finalList []map[string]interface{}) {
-	finalList = []map[string]interface{}{}
-	finalMap := dataSourceSegmentListURLToMap(result)
-	finalList = append(finalList, finalMap)
-
-	return finalList
-}
-
-func dataSourceSegmentListURLToMap(urlItem appconfigurationv1.PageHrefResponse) (urlMap map[string]interface{}) {
-	urlMap = map[string]interface{}{}
-
-	if urlItem.Href != nil {
-		urlMap["href"] = urlItem.Href
-	}
-
-	return urlMap
 }

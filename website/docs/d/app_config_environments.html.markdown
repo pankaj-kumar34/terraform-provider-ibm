@@ -31,6 +31,7 @@ The following arguments are supported:
 - `expand` - (optional, bool) If set to `true`, returns expanded view of the resource details.
 - `limit` - (optional, int) The number of records to retrieve. By default, the list operation return the first 10 records. To retrieve different set of records, use `limit` with `offset` to page through the available records.
 - `offset` - (optional, int) The number of records to skip. By specifying `offset`, you retrieve a subset of items that starts with the `offset` value. Use `offset` with `limit` to page through the available records.
+- `includes` - (optional, Array of string) Include feature and property details in the response.
 
 ## Attribute Reference
 
@@ -48,6 +49,18 @@ In addition to all argument references list, you can access the following attrib
   - `tags` - Tags associated with the environment.
 
   - `color_code` - Color code to distinguish the environment. The Hex code for the color. For example `#FF2200` for `red`.
+
+  - `features` - List of Features associated with the environment. Nested `features` blocks have the following structure:
+
+    - `feature_id` - Feature id.
+
+    - `name` - Feature name.
+
+  - `properties` - List of properties associated with the environment. Nested `properties` blocks have the following structure:
+
+    - `property_id` - Property id.
+
+    - `name` - Property name.
 
   - `created_time` - Creation time of the environment.
 

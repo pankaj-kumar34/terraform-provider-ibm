@@ -1,9 +1,9 @@
 ---
 subcategory: 'App Configuration'
 layout: 'ibm'
-page_title: 'IBM : App Configuration environments'
+page_title: 'IBM : App Configuration environment'
 description: |-
-  Manages environments.
+  Manages environment.
 ---
 
 # ibm_app_config_environment

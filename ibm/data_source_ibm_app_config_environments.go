@@ -46,6 +46,12 @@ func dataSourceIbmAppConfigEnvironments() *schema.Resource {
 				Optional:    true,
 				Description: "The number of records to skip. By specifying `offset`, you retrieve a subset of items that starts with the `offset` value. Use `offset` with `limit` to page through the available records.",
 			},
+			"includes": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Include feature and property details in the response.",
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"environments": {
 				Type:        schema.TypeList,
 				Computed:    true,
@@ -76,6 +82,44 @@ func dataSourceIbmAppConfigEnvironments() *schema.Resource {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "Color code to distinguish the environment. The Hex code for the color. For example `#FF0000` for `red`.",
+						},
+						"features": {
+							Type:        schema.TypeList,
+							Computed:    true,
+							Description: "List of Features associated with the environment.",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"feature_id": {
+										Type:        schema.TypeString,
+										Computed:    true,
+										Description: "Feature id.",
+									},
+									"name": {
+										Type:        schema.TypeString,
+										Computed:    true,
+										Description: "Feature name.",
+									},
+								},
+							},
+						},
+						"properties": {
+							Type:        schema.TypeList,
+							Computed:    true,
+							Description: "List of properties associated with the environment.",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"property_id": {
+										Type:        schema.TypeString,
+										Computed:    true,
+										Description: "Property id.",
+									},
+									"name": {
+										Type:        schema.TypeString,
+										Computed:    true,
+										Description: "Property name.",
+									},
+								},
+							},
 						},
 						"created_time": {
 							Type:        schema.TypeString,
@@ -177,7 +221,13 @@ func dataSourceIbmAppConfigEnvironmentsRead(d *schema.ResourceData, meta interfa
 	if _, ok := d.GetOk("tags"); ok {
 		options.SetTags(d.Get("tags").(string))
 	}
-
+	if _, ok := d.GetOk("includes"); ok {
+		includes := []string{}
+		for _, item := range d.Get("includes").([]interface{}) {
+			includes = append(includes, item.(string))
+		}
+		options.SetInclude(includes)
+	}
 	var environmentList *appconfigurationv1.EnvironmentList
 	var offset int64 = 0
 	var limit int64 = 10
@@ -204,7 +254,7 @@ func dataSourceIbmAppConfigEnvironmentsRead(d *schema.ResourceData, meta interfa
 		if isLimit {
 			offset = 0
 		} else {
-			offset = dataSourceEnvironmentListGetNext(result.Next)
+			offset = dataSourceAppConnfigGetNext(result.Next)
 		}
 		finalList = append(finalList, result.Environments...)
 		if offset == 0 {
@@ -238,33 +288,59 @@ func dataSourceIbmAppConfigEnvironmentsRead(d *schema.ResourceData, meta interfa
 		}
 	}
 	if environmentList.First != nil {
-		err = d.Set("first", dataSourceEnvironmentListFlattenPagination(*environmentList.First))
+		err = d.Set("first", dataSourceAppConfigFlattenPagination(*environmentList.First))
 		if err != nil {
 			return fmt.Errorf("error setting first %s", err)
 		}
 	}
 
 	if environmentList.Previous != nil {
-		err = d.Set("previous", dataSourceEnvironmentListFlattenPagination(*environmentList.Previous))
+		err = d.Set("previous", dataSourceAppConfigFlattenPagination(*environmentList.Previous))
 		if err != nil {
 			return fmt.Errorf("error setting previous %s", err)
 		}
 	}
 
 	if environmentList.Last != nil {
-		err = d.Set("last", dataSourceEnvironmentListFlattenPagination(*environmentList.Last))
+		err = d.Set("last", dataSourceAppConfigFlattenPagination(*environmentList.Last))
 		if err != nil {
 			return fmt.Errorf("error setting last %s", err)
 		}
 	}
 	if environmentList.Next != nil {
-		err = d.Set("next", dataSourceEnvironmentListFlattenPagination(*environmentList.Next))
+		err = d.Set("next", dataSourceAppConfigFlattenPagination(*environmentList.Next))
 		if err != nil {
 			return fmt.Errorf("error setting next %s", err)
 		}
 	}
 
 	return nil
+}
+
+func dataSourceAppConnfigGetNext(next interface{}) int64 {
+	if reflect.ValueOf(next).IsNil() {
+		return 0
+	}
+
+	u, err := url.Parse(reflect.ValueOf(next).Elem().FieldByName("Href").Elem().String())
+	if err != nil {
+		return 0
+	}
+
+	q := u.Query()
+	var page string
+
+	if q.Get("start") != "" {
+		page = q.Get("start")
+	} else if q.Get("offset") != "" {
+		page = q.Get("offset")
+	}
+
+	convertedVal, err := strconv.ParseInt(page, 10, 64)
+	if err != nil {
+		return 0
+	}
+	return convertedVal
 }
 
 func dataSourceEnvironmentListFlattenEnvironments(result []appconfigurationv1.Environment) (environments []map[string]interface{}) {
@@ -293,6 +369,12 @@ func dataSourceEnvironmentListEnvironmentsToMap(environmentsItem appconfiguratio
 	if environmentsItem.ColorCode != nil {
 		environmentsMap["color_code"] = environmentsItem.ColorCode
 	}
+	if environmentsItem.Features != nil {
+		environmentsMap["features"] = dataSourceAppConfigFlattenFeatures(environmentsItem.Features)
+	}
+	if environmentsItem.Properties != nil {
+		environmentsMap["properties"] = dataSourceAppConfigFlattenProperties(environmentsItem.Properties)
+	}
 	if environmentsItem.CreatedTime != nil {
 		environmentsMap["created_time"] = environmentsItem.CreatedTime.String()
 	}
@@ -306,41 +388,15 @@ func dataSourceEnvironmentListEnvironmentsToMap(environmentsItem appconfiguratio
 	return environmentsMap
 }
 
-func dataSourceEnvironmentListGetNext(next interface{}) int64 {
-	if reflect.ValueOf(next).IsNil() {
-		return 0
-	}
-
-	u, err := url.Parse(reflect.ValueOf(next).Elem().FieldByName("Href").Elem().String())
-	if err != nil {
-		return 0
-	}
-
-	q := u.Query()
-	var page string
-
-	if q.Get("start") != "" {
-		page = q.Get("start")
-	} else if q.Get("offset") != "" {
-		page = q.Get("offset")
-	}
-
-	convertedVal, err := strconv.ParseInt(page, 10, 64)
-	if err != nil {
-		return 0
-	}
-	return convertedVal
-}
-
-func dataSourceEnvironmentListFlattenPagination(result appconfigurationv1.PageHrefResponse) (finalList []map[string]interface{}) {
+func dataSourceAppConfigFlattenPagination(result appconfigurationv1.PageHrefResponse) (finalList []map[string]interface{}) {
 	finalList = []map[string]interface{}{}
-	finalMap := dataSourceEnvironmentListURLToMap(result)
+	finalMap := dataSourceAppConfigURLToMap(result)
 	finalList = append(finalList, finalMap)
 
 	return finalList
 }
 
-func dataSourceEnvironmentListURLToMap(urlItem appconfigurationv1.PageHrefResponse) (urlMap map[string]interface{}) {
+func dataSourceAppConfigURLToMap(urlItem appconfigurationv1.PageHrefResponse) (urlMap map[string]interface{}) {
 	urlMap = map[string]interface{}{}
 
 	if urlItem.Href != nil {

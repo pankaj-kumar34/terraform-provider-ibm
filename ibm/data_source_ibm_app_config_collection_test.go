@@ -47,7 +47,7 @@ func testAccCheckIbmAppConfigCollectionDataSourceConfigBasic(instanceName, name,
 			 name     = "%s"
 			 location = "us-south"
 			 service  = "apprapp"
-			 plan     = "standard"
+			 plan     = "lite"
 		 }
 		 resource "ibm_app_config_collection" "app_config_collection_resource2" {
 			 name          		= "%s"

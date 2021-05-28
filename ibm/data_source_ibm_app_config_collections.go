@@ -6,9 +6,6 @@ package ibm
 import (
 	"fmt"
 	"log"
-	"net/url"
-	"reflect"
-	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -293,7 +290,7 @@ func dataSourceIbmAppConfigCollectionsRead(d *schema.ResourceData, meta interfac
 		if isLimit {
 			offset = 0
 		} else {
-			offset = dataSourceCollectionListGetNext(result.Next)
+			offset = dataSourceAppConnfigGetNext(result.Next)
 		}
 		finalList = append(finalList, result.Collections...)
 		if offset == 0 {
@@ -327,27 +324,27 @@ func dataSourceIbmAppConfigCollectionsRead(d *schema.ResourceData, meta interfac
 		}
 	}
 	if collectionList.First != nil {
-		err = d.Set("first", dataSourceEnvironmentListFlattenPagination(*collectionList.First))
+		err = d.Set("first", dataSourceAppConfigFlattenPagination(*collectionList.First))
 		if err != nil {
 			return fmt.Errorf("error setting first %s", err)
 		}
 	}
 
 	if collectionList.Previous != nil {
-		err = d.Set("previous", dataSourceEnvironmentListFlattenPagination(*collectionList.Previous))
+		err = d.Set("previous", dataSourceAppConfigFlattenPagination(*collectionList.Previous))
 		if err != nil {
 			return fmt.Errorf("error setting previous %s", err)
 		}
 	}
 
 	if collectionList.Last != nil {
-		err = d.Set("last", dataSourceEnvironmentListFlattenPagination(*collectionList.Last))
+		err = d.Set("last", dataSourceAppConfigFlattenPagination(*collectionList.Last))
 		if err != nil {
 			return fmt.Errorf("error setting last %s", err)
 		}
 	}
 	if collectionList.Next != nil {
-		err = d.Set("next", dataSourceEnvironmentListFlattenPagination(*collectionList.Next))
+		err = d.Set("next", dataSourceAppConfigFlattenPagination(*collectionList.Next))
 		if err != nil {
 			return fmt.Errorf("error setting next %s", err)
 		}
@@ -388,18 +385,10 @@ func dataSourceCollectionListCollectionsToMap(collectionsItem appconfigurationv1
 		collectionsMap["href"] = collectionsItem.Href
 	}
 	if collectionsItem.Features != nil {
-		featuresList := []map[string]interface{}{}
-		for _, featuresItem := range collectionsItem.Features {
-			featuresList = append(featuresList, dataSourceCollectionListCollectionsFeaturesToMap(featuresItem))
-		}
-		collectionsMap["features"] = featuresList
+		collectionsMap["features"] = dataSourceAppConfigFlattenFeatures(collectionsItem.Features)
 	}
 	if collectionsItem.Properties != nil {
-		propertiesList := []map[string]interface{}{}
-		for _, propertiesItem := range collectionsItem.Properties {
-			propertiesList = append(propertiesList, dataSourceCollectionListCollectionsPropertiesToMap(propertiesItem))
-		}
-		collectionsMap["properties"] = propertiesList
+		collectionsMap["properties"] = dataSourceAppConfigFlattenProperties(collectionsItem.Properties)
 	}
 	if collectionsItem.FeaturesCount != nil {
 		collectionsMap["features_count"] = collectionsItem.FeaturesCount
@@ -409,56 +398,4 @@ func dataSourceCollectionListCollectionsToMap(collectionsItem appconfigurationv1
 	}
 
 	return collectionsMap
-}
-
-func dataSourceCollectionListCollectionsFeaturesToMap(featuresItem appconfigurationv1.FeatureOutput) (featuresMap map[string]interface{}) {
-	featuresMap = map[string]interface{}{}
-
-	if featuresItem.FeatureID != nil {
-		featuresMap["feature_id"] = featuresItem.FeatureID
-	}
-	if featuresItem.Name != nil {
-		featuresMap["name"] = featuresItem.Name
-	}
-
-	return featuresMap
-}
-
-func dataSourceCollectionListCollectionsPropertiesToMap(propertiesItem appconfigurationv1.PropertyOutput) (propertiesMap map[string]interface{}) {
-	propertiesMap = map[string]interface{}{}
-
-	if propertiesItem.PropertyID != nil {
-		propertiesMap["property_id"] = propertiesItem.PropertyID
-	}
-	if propertiesItem.Name != nil {
-		propertiesMap["name"] = propertiesItem.Name
-	}
-
-	return propertiesMap
-}
-
-func dataSourceCollectionListGetNext(next interface{}) int64 {
-	if reflect.ValueOf(next).IsNil() {
-		return 0
-	}
-
-	u, err := url.Parse(reflect.ValueOf(next).Elem().FieldByName("Href").Elem().String())
-	if err != nil {
-		return 0
-	}
-
-	q := u.Query()
-	var page string
-
-	if q.Get("start") != "" {
-		page = q.Get("start")
-	} else if q.Get("offset") != "" {
-		page = q.Get("offset")
-	}
-
-	convertedVal, err := strconv.ParseInt(page, 10, 64)
-	if err != nil {
-		return 0
-	}
-	return convertedVal
 }

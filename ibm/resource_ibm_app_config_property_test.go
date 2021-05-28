@@ -16,55 +16,13 @@ import (
 
 func TestAccIbmAppConfigPropertyBasic(t *testing.T) {
 	var conf appconfigurationv1.Property
-	environmentID := fmt.Sprintf("tf_environment_id_%d", acctest.RandIntRange(10, 100))
-	name := fmt.Sprintf("tf_name_%d", acctest.RandIntRange(10, 100))
-	propertyID := fmt.Sprintf("tf_property_id_%d", acctest.RandIntRange(10, 100))
-	typeVar := "BOOLEAN"
-	environmentIDUpdate := fmt.Sprintf("tf_environment_id_%d", acctest.RandIntRange(10, 100))
-	nameUpdate := fmt.Sprintf("tf_name_%d", acctest.RandIntRange(10, 100))
-	propertyIDUpdate := fmt.Sprintf("tf_property_id_%d", acctest.RandIntRange(10, 100))
-	typeVarUpdate := "NUMERIC"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckIbmAppConfigPropertyDestroy,
-		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccCheckIbmAppConfigPropertyConfigBasic(environmentID, name, propertyID, typeVar),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIbmAppConfigPropertyExists("ibm_app_config_property.app_config_property", conf),
-					resource.TestCheckResourceAttr("ibm_app_config_property.app_config_property", "environment_id", environmentID),
-					resource.TestCheckResourceAttr("ibm_app_config_property.app_config_property", "name", name),
-					resource.TestCheckResourceAttr("ibm_app_config_property.app_config_property", "property_id", propertyID),
-					resource.TestCheckResourceAttr("ibm_app_config_property.app_config_property", "type", typeVar),
-				),
-			},
-			resource.TestStep{
-				Config: testAccCheckIbmAppConfigPropertyConfigBasic(environmentIDUpdate, nameUpdate, propertyIDUpdate, typeVarUpdate),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("ibm_app_config_property.app_config_property", "environment_id", environmentIDUpdate),
-					resource.TestCheckResourceAttr("ibm_app_config_property.app_config_property", "name", nameUpdate),
-					resource.TestCheckResourceAttr("ibm_app_config_property.app_config_property", "property_id", propertyIDUpdate),
-					resource.TestCheckResourceAttr("ibm_app_config_property.app_config_property", "type", typeVarUpdate),
-				),
-			},
-		},
-	})
-}
-
-func TestAccIbmAppConfigPropertyAllArgs(t *testing.T) {
-	var conf appconfigurationv1.Property
-	environmentID := fmt.Sprintf("tf_environment_id_%d", acctest.RandIntRange(10, 100))
+	instanceName := fmt.Sprintf("terraform_test_%d", acctest.RandIntRange(10, 100))
 	name := fmt.Sprintf("tf_name_%d", acctest.RandIntRange(10, 100))
 	propertyID := fmt.Sprintf("tf_property_id_%d", acctest.RandIntRange(10, 100))
 	typeVar := "BOOLEAN"
 	description := fmt.Sprintf("tf_description_%d", acctest.RandIntRange(10, 100))
 	tags := fmt.Sprintf("tf_tags_%d", acctest.RandIntRange(10, 100))
-	environmentIDUpdate := fmt.Sprintf("tf_environment_id_%d", acctest.RandIntRange(10, 100))
 	nameUpdate := fmt.Sprintf("tf_name_%d", acctest.RandIntRange(10, 100))
-	propertyIDUpdate := fmt.Sprintf("tf_property_id_%d", acctest.RandIntRange(10, 100))
-	typeVarUpdate := "NUMERIC"
 	descriptionUpdate := fmt.Sprintf("tf_description_%d", acctest.RandIntRange(10, 100))
 	tagsUpdate := fmt.Sprintf("tf_tags_%d", acctest.RandIntRange(10, 100))
 
@@ -73,31 +31,32 @@ func TestAccIbmAppConfigPropertyAllArgs(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIbmAppConfigPropertyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccCheckIbmAppConfigPropertyConfig(environmentID, name, propertyID, typeVar, description, tags),
+			{
+				Config: testAccCheckIbmAppConfigPropertyConfigBasic(instanceName, name, propertyID, typeVar, description, tags),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIbmAppConfigPropertyExists("ibm_app_config_property.app_config_property", conf),
-					resource.TestCheckResourceAttr("ibm_app_config_property.app_config_property", "environment_id", environmentID),
-					resource.TestCheckResourceAttr("ibm_app_config_property.app_config_property", "name", name),
-					resource.TestCheckResourceAttr("ibm_app_config_property.app_config_property", "property_id", propertyID),
-					resource.TestCheckResourceAttr("ibm_app_config_property.app_config_property", "type", typeVar),
-					resource.TestCheckResourceAttr("ibm_app_config_property.app_config_property", "description", description),
-					resource.TestCheckResourceAttr("ibm_app_config_property.app_config_property", "tags", tags),
+					testAccCheckIbmAppConfigPropertyExists("ibm_app_config_property.app_config_property_resource1", conf),
+					resource.TestCheckResourceAttrSet("ibm_app_config_property.app_config_property_resource1", "environment_id"),
+					resource.TestCheckResourceAttrSet("ibm_app_config_property.app_config_property_resource1", "name"),
+					resource.TestCheckResourceAttrSet("ibm_app_config_property.app_config_property_resource1", "property_id"),
+					resource.TestCheckResourceAttrSet("ibm_app_config_property.app_config_property_resource1", "type"),
+					resource.TestCheckResourceAttrSet("ibm_app_config_property.app_config_property_resource1", "description"),
+					resource.TestCheckResourceAttrSet("ibm_app_config_property.app_config_property_resource1", "tags"),
+					resource.TestCheckResourceAttrSet("ibm_app_config_property.app_config_property_resource1", "created_time"),
+					resource.TestCheckResourceAttrSet("ibm_app_config_property.app_config_property_resource1", "updated_time"),
+					resource.TestCheckResourceAttrSet("ibm_app_config_property.app_config_property_resource1", "href"),
+					resource.TestCheckResourceAttrSet("ibm_app_config_property.app_config_property_resource1", "segment_exists"),
 				),
 			},
-			resource.TestStep{
-				Config: testAccCheckIbmAppConfigPropertyConfig(environmentIDUpdate, nameUpdate, propertyIDUpdate, typeVarUpdate, descriptionUpdate, tagsUpdate),
+			{
+				Config: testAccCheckIbmAppConfigPropertyConfigBasic(instanceName, nameUpdate, propertyID, typeVar, descriptionUpdate, tagsUpdate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("ibm_app_config_property.app_config_property", "environment_id", environmentIDUpdate),
-					resource.TestCheckResourceAttr("ibm_app_config_property.app_config_property", "name", nameUpdate),
-					resource.TestCheckResourceAttr("ibm_app_config_property.app_config_property", "property_id", propertyIDUpdate),
-					resource.TestCheckResourceAttr("ibm_app_config_property.app_config_property", "type", typeVarUpdate),
-					resource.TestCheckResourceAttr("ibm_app_config_property.app_config_property", "description", descriptionUpdate),
-					resource.TestCheckResourceAttr("ibm_app_config_property.app_config_property", "tags", tagsUpdate),
+					resource.TestCheckResourceAttr("ibm_app_config_property.app_config_property_resource1", "name", nameUpdate),
+					resource.TestCheckResourceAttr("ibm_app_config_property.app_config_property_resource1", "description", descriptionUpdate),
+					resource.TestCheckResourceAttr("ibm_app_config_property.app_config_property_resource1", "tags", tagsUpdate),
 				),
 			},
-			resource.TestStep{
-				ResourceName:      "ibm_app_config_property.app_config_property",
+			{
+				ResourceName:      "ibm_app_config_property.app_config_property_resource1",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -105,42 +64,25 @@ func TestAccIbmAppConfigPropertyAllArgs(t *testing.T) {
 	})
 }
 
-func testAccCheckIbmAppConfigPropertyConfigBasic(environmentID string, name string, propertyID string, typeVar string) string {
+func testAccCheckIbmAppConfigPropertyConfigBasic(instanceName, name, propertyID, typeVar, description, tags string) string {
 	return fmt.Sprintf(`
-
-		resource "ibm_app_config_property" "app_config_property" {
-			environment_id = "%s"
+	resource "ibm_resource_instance" "app_config_terraform_test496" {
+		name     = "%s"
+		location = "us-south"
+		service  = "apprapp"
+		plan     = "lite"
+	}
+		resource "ibm_app_config_property" "app_config_property_resource1" {
+			guid 					= ibm_resource_instance.app_config_terraform_test496.guid
+			environment_id = "dev"
 			name = "%s"
 			property_id = "%s"
 			type = "%s"
-			value = "FIXME"
-		}
-	`, environmentID, name, propertyID, typeVar)
-}
-
-func testAccCheckIbmAppConfigPropertyConfig(environmentID string, name string, propertyID string, typeVar string, description string, tags string) string {
-	return fmt.Sprintf(`
-
-		resource "ibm_app_config_property" "app_config_property" {
-			environment_id = "%s"
-			name = "%s"
-			property_id = "%s"
-			type = "%s"
-			value = "FIXME"
+			value = "false"
 			description = "%s"
 			tags = "%s"
-			segment_rules {
-				rules {
-					segments = ["betausers","premiumusers"]
-				}
-				value = true
-				order = 1
-			}
-			collections {
-				collection_id = "ghzinc"
-			}
 		}
-	`, environmentID, name, propertyID, typeVar, description, tags)
+	`, instanceName, name, propertyID, typeVar, description, tags)
 }
 
 func testAccCheckIbmAppConfigPropertyExists(n string, obj appconfigurationv1.Property) resource.TestCheckFunc {
@@ -151,22 +93,21 @@ func testAccCheckIbmAppConfigPropertyExists(n string, obj appconfigurationv1.Pro
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		appConfigurationClient, err := testAccProvider.Meta().(ClientSession).AppConfigurationV1()
-		if err != nil {
-			return err
-		}
-
-		getPropertyOptions := &appconfigurationv1.GetPropertyOptions{}
-
 		parts, err := idParts(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		getPropertyOptions.SetEnvironmentID(parts[0])
-		getPropertyOptions.SetPropertyID(parts[1])
+		appconfigClient, err := getAppConfigClient(testAccProvider.Meta(), parts[0])
+		if err != nil {
+			return err
+		}
+		options := &appconfigurationv1.GetPropertyOptions{}
 
-		property, _, err := appConfigurationClient.GetProperty(getPropertyOptions)
+		options.SetEnvironmentID(parts[1])
+		options.SetPropertyID(parts[2])
+
+		property, _, err := appconfigClient.GetProperty(options)
 		if err != nil {
 			return err
 		}
@@ -177,27 +118,26 @@ func testAccCheckIbmAppConfigPropertyExists(n string, obj appconfigurationv1.Pro
 }
 
 func testAccCheckIbmAppConfigPropertyDestroy(s *terraform.State) error {
-	appConfigurationClient, err := testAccProvider.Meta().(ClientSession).AppConfigurationV1()
-	if err != nil {
-		return err
-	}
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "ibm_app_config_property" {
+		if rs.Type != "ibm_app-config-property" {
 			continue
 		}
-
-		getPropertyOptions := &appconfigurationv1.GetPropertyOptions{}
-
 		parts, err := idParts(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		getPropertyOptions.SetEnvironmentID(parts[0])
-		getPropertyOptions.SetPropertyID(parts[1])
+		appconfigClient, err := getAppConfigClient(testAccProvider.Meta(), parts[0])
+		if err != nil {
+			return err
+		}
+		options := &appconfigurationv1.GetPropertyOptions{}
+
+		options.SetEnvironmentID(parts[1])
+		options.SetPropertyID(parts[2])
 
 		// Try to find the key
-		_, response, err := appConfigurationClient.GetProperty(getPropertyOptions)
+		_, response, err := appconfigClient.GetProperty(options)
 
 		if err == nil {
 			return fmt.Errorf("app_config_property still exists: %s", rs.Primary.ID)

@@ -1,14 +1,14 @@
 ---
 subcategory: 'App Configuration'
 layout: 'ibm'
-page_title: 'IBM : App Configuration segments'
+page_title: 'IBM : App Configuration segment'
 description: |-
-  Manages segments.
+  Manages segment.
 ---
 
 # ibm_app_config_segment
 
-Provides a resource for `segment`. This allows `segment` to be created, updated and deleted.
+Provides a resource for `segment`. This allows segment to be created, updated and deleted.
 
 ## Example Usage
 
@@ -33,11 +33,8 @@ The following arguments are supported:
 - `description` - (Optional, string) Segment description.
 - `tags` - (Optional, string) Tags associated with the segments.
 - `rules` - (Required, List) List of rules that determine if the entity is part of the segment.
-
   - `attribute_name` - (Required, string) Attribute name.
-
   - `operator` - (Required, string) Operator to be used for the evaluation if the entity is part of the segment.
-
   - `values` - (Required, []interface{}) List of values. Entities matching any of the given values will be considered to be part of the segment.
 
 ## Attribute Reference

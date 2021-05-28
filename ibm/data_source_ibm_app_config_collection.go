@@ -183,37 +183,40 @@ func dataSourceIbmAppConfigCollectionRead(d *schema.ResourceData, meta interface
 		}
 	}
 	if result.Features != nil {
-		err = d.Set("features", dataSourceCollectionFlattenFeatures(result.Features))
+		err = d.Set("features", dataSourceAppConfigFlattenFeatures(result.Features))
 		if err != nil {
 			return fmt.Errorf("error setting features %s", err)
 		}
 	}
 
 	if result.Properties != nil {
-		err = d.Set("properties", dataSourceCollectionFlattenProperties(result.Properties))
+		err = d.Set("properties", dataSourceAppConfigFlattenProperties(result.Properties))
 		if err != nil {
 			return fmt.Errorf("error setting properties %s", err)
 		}
 	}
-	if err = d.Set("features_count", result.FeaturesCount); err != nil {
-		return fmt.Errorf("error setting features_count: %s", err)
+	if result.FeaturesCount != nil {
+		if err = d.Set("features_count", result.FeaturesCount); err != nil {
+			return fmt.Errorf("error setting features_count: %s", err)
+		}
 	}
-	if err = d.Set("properties_count", result.PropertiesCount); err != nil {
-		return fmt.Errorf("error setting properties_count: %s", err)
+	if result.PropertiesCount != nil {
+		if err = d.Set("properties_count", result.PropertiesCount); err != nil {
+			return fmt.Errorf("error setting properties_count: %s", err)
+		}
 	}
-
 	return nil
 }
 
-func dataSourceCollectionFlattenFeatures(result []appconfigurationv1.FeatureOutput) (features []map[string]interface{}) {
+func dataSourceAppConfigFlattenFeatures(result []appconfigurationv1.FeatureOutput) (features []map[string]interface{}) {
 	for _, featuresItem := range result {
-		features = append(features, dataSourceCollectionFeaturesToMap(featuresItem))
+		features = append(features, dataSourceAppConfigFeaturesToMap(featuresItem))
 	}
 
 	return features
 }
 
-func dataSourceCollectionFeaturesToMap(featuresItem appconfigurationv1.FeatureOutput) (featuresMap map[string]interface{}) {
+func dataSourceAppConfigFeaturesToMap(featuresItem appconfigurationv1.FeatureOutput) (featuresMap map[string]interface{}) {
 	featuresMap = map[string]interface{}{}
 
 	if featuresItem.FeatureID != nil {
@@ -226,15 +229,15 @@ func dataSourceCollectionFeaturesToMap(featuresItem appconfigurationv1.FeatureOu
 	return featuresMap
 }
 
-func dataSourceCollectionFlattenProperties(result []appconfigurationv1.PropertyOutput) (properties []map[string]interface{}) {
+func dataSourceAppConfigFlattenProperties(result []appconfigurationv1.PropertyOutput) (properties []map[string]interface{}) {
 	for _, propertiesItem := range result {
-		properties = append(properties, dataSourceCollectionPropertiesToMap(propertiesItem))
+		properties = append(properties, dataSourceAppConfigPropertiesToMap(propertiesItem))
 	}
 
 	return properties
 }
 
-func dataSourceCollectionPropertiesToMap(propertiesItem appconfigurationv1.PropertyOutput) (propertiesMap map[string]interface{}) {
+func dataSourceAppConfigPropertiesToMap(propertiesItem appconfigurationv1.PropertyOutput) (propertiesMap map[string]interface{}) {
 	propertiesMap = map[string]interface{}{}
 
 	if propertiesItem.PropertyID != nil {

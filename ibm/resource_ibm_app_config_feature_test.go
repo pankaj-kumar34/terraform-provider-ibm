@@ -63,7 +63,7 @@ func testAccCheckIbmAppConfigFeatureConfigBasic(name, envName, featureID, featur
 			name     = "%s"
 			location = "us-south"
 			service  = "apprapp"
-			plan     = "standard"
+			plan     = "lite"
 		}
 		resource "ibm_app_config_feature" "ibm_app_config_feature_resource1" {
 			guid           	= ibm_resource_instance.app_config_terraform_test456.guid

@@ -164,6 +164,29 @@ func resourceIbmAppConfigTypeValidator() *ResourceValidator {
 }
 
 // inputs
+func getAppConfigValueProperty(d *schema.ResourceData, value string) (interface{}, error) {
+	var newValue interface{}
+	switch d.Get("type").(string) {
+	case "STRING":
+		newValue = value
+	case "NUMERIC":
+		v, err := strconv.ParseFloat(value, 64)
+		if err != nil {
+			return nil, fmt.Errorf("'value' parameter in 'segment_rules' has wrong value: %s", err)
+		}
+		newValue = v
+	case "BOOLEAN":
+		if value == "false" {
+			newValue = false
+		} else if value == "true" {
+			newValue = true
+		} else {
+			return nil, fmt.Errorf("'value' parameter in 'segment_rules' has wrong value")
+		}
+	}
+	return newValue, nil
+}
+
 func resourceIbmAppConfigMapToCollections(collectionMap map[string]interface{}) appconfigurationv1.CollectionRef {
 	collectionRef := appconfigurationv1.CollectionRef{}
 	collectionRef.CollectionID = core.StringPtr(collectionMap["collection_id"].(string))
@@ -184,24 +207,12 @@ func resourceIbmAppConfigMapToSegmentRule(d *schema.ResourceData, segmentRuleMap
 	segmentRule.Order = core.Int64Ptr(int64(segmentRuleMap["order"].(int)))
 
 	ruleValue := segmentRuleMap["value"].(string)
-	switch d.Get("type").(string) {
-	case "STRING":
-		segmentRule.Value = ruleValue
-	case "NUMERIC":
-		v, err := strconv.ParseFloat(ruleValue, 64)
-		if err != nil {
-			return segmentRule, fmt.Errorf("'value' parameter in 'segment_rules' has wrong value: %s", err)
-		}
-		segmentRule.Value = v
-	case "BOOLEAN":
-		if ruleValue == "false" {
-			segmentRule.Value = false
-		} else if ruleValue == "true" {
-			segmentRule.Value = true
-		} else {
-			return segmentRule, fmt.Errorf("'value' parameter in 'segment_rules' has wrong value")
-		}
+
+	v, err := getAppConfigValueProperty(d, ruleValue)
+	if err != nil {
+		return segmentRule, err
 	}
+	segmentRule.Value = v
 
 	return segmentRule, nil
 }
@@ -249,8 +260,9 @@ func resourceIbmAppConfigSegmentRuleToMap(segmentRule appconfigurationv1.Segment
 
 	rules := []map[string]interface{}{}
 	for _, rulesItem := range segmentRule.Rules {
-		rulesItemMap := resourceIbmAppConfigRuleToMap(rulesItem)
-		rules = append(rules, rulesItemMap)
+		ruleMap := map[string]interface{}{}
+		ruleMap["segments"] = rulesItem.Segments
+		rules = append(rules, ruleMap)
 	}
 
 	segmentRuleMap["rules"] = rules
@@ -269,37 +281,39 @@ func resourceIbmAppConfigSegmentRuleToMap(segmentRule appconfigurationv1.Segment
 	return segmentRuleMap
 }
 
-func resourceIbmAppConfigRuleToMap(rule appconfigurationv1.TargetSegments) map[string]interface{} {
-	ruleMap := map[string]interface{}{}
-	ruleMap["segments"] = rule.Segments
-	return ruleMap
-}
-
-func resourceIbmAppConfigCollectionToMap(collectionRef appconfigurationv1.CollectionRef) map[string]interface{} {
-	collectionRefMap := map[string]interface{}{}
-	collectionRefMap["collection_id"] = collectionRef.CollectionID
-	collectionRefMap["name"] = collectionRef.Name
-	return collectionRefMap
-}
-
 // segment response
-func getAppConfigSegmentResponse(result *appconfigurationv1.Feature) []map[string]interface{} {
-	segmentRules := []map[string]interface{}{}
-	for _, segmentRulesItem := range result.SegmentRules {
+func getAppConfigSegmentResponse(segmentRule []appconfigurationv1.SegmentRule) []map[string]interface{} {
+	data := []map[string]interface{}{}
+	for _, segmentRulesItem := range segmentRule {
 		segmentRulesItemMap := resourceIbmAppConfigSegmentRuleToMap(segmentRulesItem)
-		segmentRules = append(segmentRules, segmentRulesItemMap)
+		data = append(data, segmentRulesItemMap)
 	}
-	return segmentRules
+	return data
 }
 
 // collection response
-func getAppConfigCollectionResponse(result *appconfigurationv1.Feature) []map[string]interface{} {
-	segmentRules := []map[string]interface{}{}
-	for _, segmentRulesItem := range result.SegmentRules {
-		segmentRulesItemMap := resourceIbmAppConfigSegmentRuleToMap(segmentRulesItem)
-		segmentRules = append(segmentRules, segmentRulesItemMap)
+func getAppConfigCollectionResponse(collections []appconfigurationv1.CollectionRef) []map[string]interface{} {
+	data := []map[string]interface{}{}
+	for _, collectionsItem := range collections {
+		collectionRefMap := map[string]interface{}{}
+		collectionRefMap["collection_id"] = collectionsItem.CollectionID
+		collectionRefMap["name"] = collectionsItem.Name
+		data = append(data, collectionRefMap)
 	}
-	return segmentRules
+	return data
+}
+
+// formate type value to string
+func getAppConfigFormattedTypeValue(value interface{}) string {
+	switch value.(interface{}).(type) {
+	case string:
+		return value.(string)
+	case float64:
+		return fmt.Sprintf("%v", value)
+	case bool:
+		return strconv.FormatBool(value.(bool))
+	}
+	return ""
 }
 
 // create
@@ -313,9 +327,20 @@ func resourceIbmIbmAppConfigFeatureCreate(d *schema.ResourceData, meta interface
 	options.SetType(d.Get("type").(string))
 	options.SetName(d.Get("name").(string))
 	options.SetFeatureID(d.Get("feature_id").(string))
-	options.SetEnabledValue(d.Get("enabled_value").(string))
 	options.SetEnvironmentID(d.Get("environment_id").(string))
-	options.SetDisabledValue(d.Get("disabled_value").(string))
+
+	enabledValue := d.Get("enabled_value").(string)
+	v, err := getAppConfigValueProperty(d, enabledValue)
+	if err != nil {
+		return err
+	}
+	options.SetEnabledValue(v)
+	disabledValue := d.Get("disabled_value").(string)
+	v, err = getAppConfigValueProperty(d, disabledValue)
+	if err != nil {
+		return err
+	}
+	options.SetDisabledValue(v)
 
 	if _, ok := d.GetOk("description"); ok {
 		options.SetDescription(d.Get("description").(string))
@@ -347,20 +372,20 @@ func resourceIbmIbmAppConfigFeatureCreate(d *schema.ResourceData, meta interface
 
 // update
 func resourceIbmIbmAppConfigFeatureUpdate(d *schema.ResourceData, meta interface{}) error {
-	parts, err := idParts(d.Id())
-	if err != nil {
-		return nil
-	}
-	appconfigClient, err := getAppConfigClient(meta, parts[0])
-	if err != nil {
-		return err
-	}
-
-	options := &appconfigurationv1.UpdateFeatureOptions{}
-	options.SetEnvironmentID(parts[1])
-	options.SetFeatureID(parts[2])
-
 	if ok := d.HasChanges("name", "enabled_value", "disabled_value", "description", "tags", "segment_rules", "collections"); ok {
+		parts, err := idParts(d.Id())
+		if err != nil {
+			return nil
+		}
+		appconfigClient, err := getAppConfigClient(meta, parts[0])
+		if err != nil {
+			return err
+		}
+
+		options := &appconfigurationv1.UpdateFeatureOptions{}
+		options.SetEnvironmentID(parts[1])
+		options.SetFeatureID(parts[2])
+
 		options.SetName(d.Get("name").(string))
 		options.SetEnabledValue(d.Get("enabled_value").(string))
 		options.SetDisabledValue(d.Get("disabled_value").(string))
@@ -467,37 +492,19 @@ func resourceIbmIbmAppConfigFeatureRead(d *schema.ResourceData, meta interface{}
 		}
 	}
 	if result.EnabledValue != nil {
-		enabledValue := result.EnabledValue
-
-		switch enabledValue.(interface{}).(type) {
-		case string:
-			d.Set("enabled_value", enabledValue.(string))
-		case float64:
-			d.Set("enabled_value", fmt.Sprintf("%v", enabledValue))
-		case bool:
-			d.Set("enabled_value", strconv.FormatBool(enabledValue.(bool)))
-		}
+		d.Set("enabled_value", getAppConfigFormattedTypeValue(result.EnabledValue))
 	}
 	if result.DisabledValue != nil {
-		disabledValue := result.DisabledValue
-
-		switch disabledValue.(interface{}).(type) {
-		case string:
-			d.Set("disabled_value", disabledValue.(string))
-		case float64:
-			d.Set("disabled_value", fmt.Sprintf("%v", disabledValue))
-		case bool:
-			d.Set("disabled_value", strconv.FormatBool(disabledValue.(bool)))
-		}
+		d.Set("disabled_value", getAppConfigFormattedTypeValue(result.DisabledValue))
 	}
 	if result.SegmentRules != nil {
-		segmentRules := getAppConfigSegmentResponse(result)
+		segmentRules := getAppConfigSegmentResponse(result.SegmentRules)
 		if err = d.Set("segment_rules", segmentRules); err != nil {
 			return fmt.Errorf("error setting segment_rules: %s", err)
 		}
 	}
 	if result.Collections != nil {
-		collections := getAppConfigCollectionResponse(result)
+		collections := getAppConfigCollectionResponse(result.Collections)
 		if err = d.Set("collections", collections); err != nil {
 			return fmt.Errorf("error setting collections: %s", err)
 		}

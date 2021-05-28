@@ -46,7 +46,7 @@ func testAccCheckIbmAppConfigSegmentDataSourceConfig(name, segmentName, segmentS
 		name     = "%s"
 		location = "us-south"
 		service  = "apprapp"
-		plan     = "standard"
+		plan     = "lite"
 	}
 	resource "ibm_app_config_segment" "app_config_segment_resource2" {
 		name 					= "%s"

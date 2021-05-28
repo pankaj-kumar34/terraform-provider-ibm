@@ -26,6 +26,7 @@ The following arguments are supported:
 
 - `guid` - (Required, string) guid of the App Configuration service. Get it from the service instance credentials section of the dashboard.
 - `environment_id` - (Required, string) Environment Id.
+- `includes` - (optional, Array of string) Include feature and property details in the response.
 - `expand` - (optional, bool) If set to `true`, returns expanded view of the resource details.
 
 ## Attribute Reference
@@ -37,6 +38,12 @@ In addition to all argument references list, you can access the following attrib
 - `description` - Environment description.
 - `tags` - Tags associated with the environment.
 - `color_code` - Color code to distinguish the environment. The Hex code for the color. For example `#FF0000` for `red`.
+- `features` - List of Features associated with the collection. Nested `features` blocks have the following structure:
+  - `feature_id` - Feature id.
+  - `name` - Feature name.
+- `properties` - List of properties associated with the collection. Nested `properties` blocks have the following structure:
+  - `property_id` - Property id.
+  - `name` - Property name.
 - `created_time` - Creation time of the environment.
 - `updated_time` - Last modified time of the environment data.
 - `href` - Environment URL.

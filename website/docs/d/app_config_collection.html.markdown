@@ -16,6 +16,7 @@ Provides a read-only data source for `collection`. You can then reference the fi
 data "ibm_app_config_collection" "app_config_collection" {
 	guid = "guid"
 	expand = "expand"
+  includes = "includes"
 	collection_id = "collection_id"
 }
 ```
@@ -26,6 +27,7 @@ The following arguments are supported:
 
 - `guid` - (Required, string) guid of the App Configuration service. Get it from the service instance credentials section of the dashboard.
 - `collection_id` - (Required, string) Collection Id of the collection.
+- `includes` - (optional, Array of string) Include feature and property details in the response.
 - `expand` - (optional, bool) If set to `true`, returns expanded view of the resource details.
 
 ## Attribute Reference

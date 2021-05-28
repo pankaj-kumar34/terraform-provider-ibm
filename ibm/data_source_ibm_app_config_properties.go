@@ -12,9 +12,9 @@ import (
 	"github.com/IBM/appconfiguration-go-admin-sdk/appconfigurationv1"
 )
 
-func dataSourceIbmAppConfigFeatures() *schema.Resource {
+func dataSourceIbmAppConfigProperties() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceIbmAppConfigFeaturesRead,
+		Read: dataSourceIbmAppConfigPropertiesRead,
 
 		Schema: map[string]*schema.Schema{
 			"guid": {
@@ -70,56 +70,46 @@ func dataSourceIbmAppConfigFeatures() *schema.Resource {
 				Optional:    true,
 				Description: "The number of records to skip. By specifying `offset`, you retrieve a subset of items that starts with the `offset` value. Use `offset` with `limit` to page through the available records.",
 			},
-			"features": {
+			"properties": {
 				Type:        schema.TypeList,
 				Computed:    true,
-				Description: "Array of Features.",
+				Description: "Array of properties.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Feature name.",
+							Description: "Property name.",
 						},
-						"feature_id": {
+						"property_id": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Feature id.",
+							Description: "Property id.",
 						},
 						"description": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Feature description.",
+							Description: "Property description.",
 						},
 						"type": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Type of the feature (BOOLEAN, STRING, NUMERIC).",
+							Description: "Type of the Property (BOOLEAN, STRING, NUMERIC).",
 						},
-						"enabled_value": {
-							Type:        schema.TypeString,
+						"value": {
+							Type:        schema.TypeMap,
 							Computed:    true,
-							Description: "Value of the feature when it is enabled. The value can be Boolean, String or a Numeric value as per the `type` attribute.",
-						},
-						"disabled_value": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Value of the feature when it is disabled. The value can be Boolean, String or a Numeric value as per the `type` attribute.",
-						},
-						"enabled": {
-							Type:        schema.TypeBool,
-							Computed:    true,
-							Description: "The state of the feature flag.",
+							Description: "Value of the Property. The value can be Boolean, String or a Numeric value as per the `type` attribute.",
 						},
 						"tags": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Tags associated with the feature.",
+							Description: "Tags associated with the property.",
 						},
 						"segment_rules": {
 							Type:        schema.TypeList,
 							Computed:    true,
-							Description: "Specify the targeting rules that is used to set different feature flag values for different segments.",
+							Description: "Specify the targeting rules that is used to set different property values for different segments.",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"rules": {
@@ -140,7 +130,7 @@ func dataSourceIbmAppConfigFeatures() *schema.Resource {
 										},
 									},
 									"value": {
-										Type:        schema.TypeString,
+										Type:        schema.TypeMap,
 										Computed:    true,
 										Description: "Value to be used for evaluation for this rule. The value can be Boolean, String or a Numeric value as per the `type` attribute.",
 									},
@@ -155,12 +145,12 @@ func dataSourceIbmAppConfigFeatures() *schema.Resource {
 						"segment_exists": {
 							Type:        schema.TypeBool,
 							Computed:    true,
-							Description: "Denotes if the targeting rules are specified for the feature flag.",
+							Description: "Denotes if the targeting rules are specified for the property.",
 						},
 						"collections": {
 							Type:        schema.TypeList,
 							Computed:    true,
-							Description: "List of collection id representing the collections that are associated with the specified feature flag.",
+							Description: "List of collection id representing the collections that are associated with the specified property.",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"collection_id": {
@@ -179,17 +169,17 @@ func dataSourceIbmAppConfigFeatures() *schema.Resource {
 						"created_time": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Creation time of the feature flag.",
+							Description: "Creation time of the property.",
 						},
 						"updated_time": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Last modified time of the feature flag data.",
+							Description: "Last modified time of the property data.",
 						},
 						"href": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Feature flag URL.",
+							Description: "Property URL.",
 						},
 					},
 				},
@@ -259,7 +249,7 @@ func dataSourceIbmAppConfigFeatures() *schema.Resource {
 	}
 }
 
-func dataSourceIbmAppConfigFeaturesRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceIbmAppConfigPropertiesRead(d *schema.ResourceData, meta interface{}) error {
 	guid := d.Get("guid").(string)
 
 	appconfigClient, err := getAppConfigClient(meta, guid)
@@ -267,8 +257,10 @@ func dataSourceIbmAppConfigFeaturesRead(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	options := &appconfigurationv1.ListFeaturesOptions{}
+	options := &appconfigurationv1.ListPropertiesOptions{}
+
 	options.SetEnvironmentID(d.Get("environment_id").(string))
+
 	if _, ok := d.GetOk("expand"); ok {
 		options.SetExpand(d.Get("expand").(bool))
 	}
@@ -300,12 +292,11 @@ func dataSourceIbmAppConfigFeaturesRead(d *schema.ResourceData, meta interface{}
 		options.SetInclude(includes)
 	}
 
-	var featuresList *appconfigurationv1.FeaturesList
+	var propertiesList *appconfigurationv1.PropertiesList
 	var offset int64
 	var limit int64 = 10
 	var isLimit bool
-	finalList := []appconfigurationv1.Feature{}
-
+	finalList := []appconfigurationv1.Property{}
 	if _, ok := d.GetOk("limit"); ok {
 		isLimit = true
 		limit = int64(d.Get("limit").(int))
@@ -316,10 +307,10 @@ func dataSourceIbmAppConfigFeaturesRead(d *schema.ResourceData, meta interface{}
 	}
 	for {
 		options.Offset = &offset
-		result, response, err := appconfigClient.ListFeatures(options)
-		featuresList = result
+		result, response, err := appconfigClient.ListProperties(options)
+		propertiesList = result
 		if err != nil {
-			log.Printf("[DEBUG] ListFeatures failed %s\n%s", err, response)
+			log.Printf("[DEBUG] ListProperties failed %s\n%s", err, response)
 			return err
 		}
 		if isLimit {
@@ -327,59 +318,59 @@ func dataSourceIbmAppConfigFeaturesRead(d *schema.ResourceData, meta interface{}
 		} else {
 			offset = dataSourceAppConnfigGetNext(result.Next)
 		}
-		finalList = append(finalList, result.Features...)
+		finalList = append(finalList, result.Properties...)
 		if offset == 0 {
 			break
 		}
 	}
 
-	featuresList.Features = finalList
+	propertiesList.Properties = finalList
 
 	d.SetId(fmt.Sprintf("%s/%s", guid, *options.EnvironmentID))
 
-	if featuresList.Features != nil {
-		err = d.Set("features", dataSourceFeaturesListFlattenFeatures(featuresList.Features))
+	if propertiesList.Properties != nil {
+		err = d.Set("properties", getAppConfigPropertiesResponse(propertiesList.Properties))
 		if err != nil {
-			return fmt.Errorf("error setting features %s", err)
+			return fmt.Errorf("error setting properties %s", err)
 		}
 	}
-	if featuresList.TotalCount != nil {
-		if err = d.Set("total_count", featuresList.TotalCount); err != nil {
+	if propertiesList.TotalCount != nil {
+		if err = d.Set("total_count", propertiesList.TotalCount); err != nil {
 			return fmt.Errorf("error setting total_count: %s", err)
 		}
 	}
-	if featuresList.Limit != nil {
-		if err = d.Set("limit", featuresList.Limit); err != nil {
+	if propertiesList.Limit != nil {
+		if err = d.Set("limit", propertiesList.Limit); err != nil {
 			return fmt.Errorf("error setting limit: %s", err)
 		}
 	}
-	if featuresList.Offset != nil {
-		if err = d.Set("offset", featuresList.Offset); err != nil {
+	if propertiesList.Offset != nil {
+		if err = d.Set("offset", propertiesList.Offset); err != nil {
 			return fmt.Errorf("error setting offset: %s", err)
 		}
 	}
-	if featuresList.First != nil {
-		err = d.Set("first", dataSourceAppConfigFlattenPagination(*featuresList.First))
+	if propertiesList.First != nil {
+		err = d.Set("first", dataSourceAppConfigFlattenPagination(*propertiesList.First))
 		if err != nil {
 			return fmt.Errorf("error setting first %s", err)
 		}
 	}
 
-	if featuresList.Previous != nil {
-		err = d.Set("previous", dataSourceAppConfigFlattenPagination(*featuresList.Previous))
+	if propertiesList.Previous != nil {
+		err = d.Set("previous", dataSourceAppConfigFlattenPagination(*propertiesList.Previous))
 		if err != nil {
 			return fmt.Errorf("error setting previous %s", err)
 		}
 	}
 
-	if featuresList.Last != nil {
-		err = d.Set("last", dataSourceAppConfigFlattenPagination(*featuresList.Last))
+	if propertiesList.Last != nil {
+		err = d.Set("last", dataSourceAppConfigFlattenPagination(*propertiesList.Last))
 		if err != nil {
 			return fmt.Errorf("error setting last %s", err)
 		}
 	}
-	if featuresList.Next != nil {
-		err = d.Set("next", dataSourceAppConfigFlattenPagination(*featuresList.Next))
+	if propertiesList.Next != nil {
+		err = d.Set("next", dataSourceAppConfigFlattenPagination(*propertiesList.Next))
 		if err != nil {
 			return fmt.Errorf("error setting next %s", err)
 		}
@@ -388,59 +379,51 @@ func dataSourceIbmAppConfigFeaturesRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func dataSourceFeaturesListFlattenFeatures(result []appconfigurationv1.Feature) (features []map[string]interface{}) {
-	for _, featuresItem := range result {
-		features = append(features, dataSourceFeaturesListFeaturesToMap(featuresItem))
+func getAppConfigPropertiesResponse(result []appconfigurationv1.Property) (properties []map[string]interface{}) {
+	for _, item := range result {
+		properties = append(properties, handleAppConfigPropertyResponse(item))
 	}
-
-	return features
+	return properties
 }
 
-func dataSourceFeaturesListFeaturesToMap(featuresItem appconfigurationv1.Feature) (featuresMap map[string]interface{}) {
-	featuresMap = map[string]interface{}{}
+func handleAppConfigPropertyResponse(property appconfigurationv1.Property) (propertyMap map[string]interface{}) {
+	propertyMap = map[string]interface{}{}
 
-	if featuresItem.Name != nil {
-		featuresMap["name"] = featuresItem.Name
+	if property.Name != nil {
+		propertyMap["name"] = property.Name
 	}
-	if featuresItem.FeatureID != nil {
-		featuresMap["feature_id"] = featuresItem.FeatureID
+	if property.PropertyID != nil {
+		propertyMap["property_id"] = property.PropertyID
 	}
-	if featuresItem.Description != nil {
-		featuresMap["description"] = featuresItem.Description
+	if property.Description != nil {
+		propertyMap["description"] = property.Description
 	}
-	if featuresItem.Type != nil {
-		featuresMap["type"] = featuresItem.Type
+	if property.Type != nil {
+		propertyMap["type"] = property.Type
 	}
-	if featuresItem.Enabled != nil {
-		featuresMap["enabled"] = featuresItem.Enabled
+	if property.Value != nil {
+		propertyMap["value"] = property.Value
 	}
-	if featuresItem.Tags != nil {
-		featuresMap["tags"] = featuresItem.Tags
+	if property.Tags != nil {
+		propertyMap["tags"] = property.Tags
 	}
-	if featuresItem.SegmentRules != nil {
-		featuresMap["segment_rules"] = getAppConfigSegmentResponse(featuresItem.SegmentRules)
+	if property.SegmentExists != nil {
+		propertyMap["segment_exists"] = property.SegmentExists
 	}
-	if featuresItem.SegmentExists != nil {
-		featuresMap["segment_exists"] = featuresItem.SegmentExists
+	if property.UpdatedTime != nil {
+		propertyMap["updated_time"] = property.UpdatedTime
 	}
-	if featuresItem.Collections != nil {
-		featuresMap["collections"] = getAppConfigCollectionResponse(featuresItem.Collections)
+	if property.CreatedTime != nil {
+		propertyMap["created_time"] = property.CreatedTime
 	}
-	if featuresItem.CreatedTime != nil {
-		featuresMap["created_time"] = featuresItem.CreatedTime.String()
+	if property.Href != nil {
+		propertyMap["href"] = property.Href
 	}
-	if featuresItem.UpdatedTime != nil {
-		featuresMap["updated_time"] = featuresItem.UpdatedTime.String()
+	if property.Collections != nil {
+		propertyMap["collections"] = getAppConfigCollectionResponse(property.Collections)
 	}
-	if featuresItem.Href != nil {
-		featuresMap["href"] = featuresItem.Href
+	if property.SegmentRules != nil {
+		propertyMap["segment_rules"] = getAppConfigSegmentResponse(property.SegmentRules)
 	}
-
-	if featuresItem.EnabledValue != nil {
-		featuresMap["enabled_value"] = getAppConfigFormattedTypeValue(featuresItem.EnabledValue)
-	}
-	if featuresItem.DisabledValue != nil {
-		featuresMap["disabled_value"] = getAppConfigFormattedTypeValue(featuresItem.DisabledValue)
-	}
-	return featuresMap
+	return propertyMap
 }
