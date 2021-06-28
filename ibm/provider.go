@@ -8,8 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/IBM-Cloud/terraform-provider-ibm/ibm/internal/mutexkv"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"github.com/IBM-Cloud/terraform-provider-ibm/ibm/internal/mutexkv"
 )
 
 // This is a global MutexKV for use within this plugin.
@@ -197,6 +198,7 @@ func Provider() *schema.Provider {
 			"ibm_cis_custom_pages":                   dataSourceIBMCISCustomPages(),
 			"ibm_cis_page_rules":                     dataSourceIBMCISPageRules(),
 			"ibm_cis_waf_rules":                      dataSourceIBMCISWAFRules(),
+			"ibm_cis_filters":                        dataSourceIBMCISFilters(),
 			"ibm_database":                           dataSourceIBMDatabaseInstance(),
 			"ibm_compute_bare_metal":                 dataSourceIBMComputeBareMetal(),
 			"ibm_compute_image_template":             dataSourceIBMComputeImageTemplate(),
@@ -250,10 +252,14 @@ func Provider() *schema.Provider {
 			"ibm_is_images":                          dataSourceIBMISImages(),
 			"ibm_is_endpoint_gateway_targets":        dataSourceIBMISEndpointGatewayTargets(),
 			"ibm_is_instance_group":                  dataSourceIBMISInstanceGroup(),
+			"ibm_is_instance_group_memberships":      dataSourceIBMISInstanceGroupMemberships(),
+			"ibm_is_instance_group_membership":       dataSourceIBMISInstanceGroupMembership(),
 			"ibm_is_instance_group_manager":          dataSourceIBMISInstanceGroupManager(),
 			"ibm_is_instance_group_managers":         dataSourceIBMISInstanceGroupManagers(),
 			"ibm_is_instance_group_manager_policies": dataSourceIBMISInstanceGroupManagerPolicies(),
 			"ibm_is_instance_group_manager_policy":   dataSourceIBMISInstanceGroupManagerPolicy(),
+			"ibm_is_instance_group_manager_action":   dataSourceIBMISInstanceGroupManagerAction(),
+			"ibm_is_instance_group_manager_actions":  dataSourceIBMISInstanceGroupManagerActions(),
 			"ibm_is_virtual_endpoint_gateways":       dataSourceIBMISEndpointGateways(),
 			"ibm_is_virtual_endpoint_gateway_ips":    dataSourceIBMISEndpointGatewayIPs(),
 			"ibm_is_virtual_endpoint_gateway":        dataSourceIBMISEndpointGateway(),
@@ -289,6 +295,10 @@ func Provider() *schema.Provider {
 			"ibm_is_vpc_routing_table_routes":        dataSourceIBMISVPCRoutingTableRoutes(),
 			"ibm_is_zone":                            dataSourceIBMISZone(),
 			"ibm_is_zones":                           dataSourceIBMISZones(),
+			"ibm_is_operating_system":                dataSourceIBMISOperatingSystem(),
+			"ibm_is_operating_systems":               dataSourceIBMISOperatingSystems(),
+			"ibm_is_network_acl_rule":                dataSourceIBMISNetworkACLRule(),
+			"ibm_is_network_acl_rules":               dataSourceIBMISNetworkACLRules(),
 			"ibm_lbaas":                              dataSourceIBMLbaas(),
 			"ibm_network_vlan":                       dataSourceIBMNetworkVlan(),
 			"ibm_org":                                dataSourceIBMOrg(),
@@ -380,8 +390,10 @@ func Provider() *schema.Provider {
 			"ibm_secrets_manager_secret":  dataSourceIBMSecretsManagerSecret(),
 
 			//Added for Satellite
-			"ibm_satellite_location":           dataSourceIBMSatelliteLocation(),
-			"ibm_satellite_attach_host_script": dataSourceIBMSatelliteAttachHostScript(),
+			"ibm_satellite_location":            dataSourceIBMSatelliteLocation(),
+			"ibm_satellite_attach_host_script":  dataSourceIBMSatelliteAttachHostScript(),
+			"ibm_satellite_cluster":             dataSourceIBMSatelliteCluster(),
+			"ibm_satellite_cluster_worker_pool": dataSourceIBMSatelliteClusterWorkerPool(),
 
 			// Catalog related resources
 			"ibm_cm_catalog":           dataSourceIBMCmCatalog(),
@@ -431,6 +443,7 @@ func Provider() *schema.Provider {
 			"ibm_cis_custom_page":                                resourceIBMCISCustomPage(),
 			"ibm_cis_waf_rule":                                   resourceIBMCISWAFRule(),
 			"ibm_cis_certificate_order":                          resourceIBMCISCertificateOrder(),
+			"ibm_cis_filter":                                     resourceIBMCISFilter(),
 			"ibm_compute_autoscale_group":                        resourceIBMComputeAutoScaleGroup(),
 			"ibm_compute_autoscale_policy":                       resourceIBMComputeAutoScalePolicy(),
 			"ibm_compute_bare_metal":                             resourceIBMComputeBareMetal(),
@@ -491,8 +504,10 @@ func Provider() *schema.Provider {
 			"ibm_is_instance":                                    resourceIBMISInstance(),
 			"ibm_is_instance_disk_management":                    resourceIBMISInstanceDiskManagement(),
 			"ibm_is_instance_group":                              resourceIBMISInstanceGroup(),
+			"ibm_is_instance_group_membership":                   resourceIBMISInstanceGroupMembership(),
 			"ibm_is_instance_group_manager":                      resourceIBMISInstanceGroupManager(),
 			"ibm_is_instance_group_manager_policy":               resourceIBMISInstanceGroupManagerPolicy(),
+			"ibm_is_instance_group_manager_action":               resourceIBMISInstanceGroupManagerAction(),
 			"ibm_is_virtual_endpoint_gateway":                    resourceIBMISEndpointGateway(),
 			"ibm_is_virtual_endpoint_gateway_ip":                 resourceIBMISEndpointGatewayIP(),
 			"ibm_is_instance_template":                           resourceIBMISInstanceTemplate(),
@@ -505,6 +520,7 @@ func Provider() *schema.Provider {
 			"ibm_is_lb_pool":                                     resourceIBMISLBPool(),
 			"ibm_is_lb_pool_member":                              resourceIBMISLBPoolMember(),
 			"ibm_is_network_acl":                                 resourceIBMISNetworkACL(),
+			"ibm_is_network_acl_rule":                            resourceIBMISNetworkACLRule(),
 			"ibm_is_public_gateway":                              resourceIBMISPublicGateway(),
 			"ibm_is_security_group":                              resourceIBMISSecurityGroup(),
 			"ibm_is_security_group_rule":                         resourceIBMISSecurityGroupRule(),
@@ -616,10 +632,12 @@ func Provider() *schema.Provider {
 			"ibm_schematics_job":       resourceIBMSchematicsJob(),
 
 			//satellite  resources
-			"ibm_satellite_location": resourceIBMSatelliteLocation(),
-			"ibm_satellite_host":     resourceIBMSatelliteHost(),
+			"ibm_satellite_location":            resourceIBMSatelliteLocation(),
+			"ibm_satellite_host":                resourceIBMSatelliteHost(),
+			"ibm_satellite_cluster":             resourceIBMSatelliteCluster(),
+			"ibm_satellite_cluster_worker_pool": resourceIBMSatelliteClusterWorkerPool(),
 
-			//Resource Tag
+			//Added for Resource Tag
 			"ibm_resource_tag": resourceIBMResourceTag(),
 		},
 
@@ -653,6 +671,7 @@ func Validator() ValidatorDict {
 				"ibm_cis_range_app":                     resourceIBMCISRangeAppValidator(),
 				"ibm_cis_waf_rule":                      resourceIBMCISWAFRuleValidator(),
 				"ibm_cis_certificate_order":             resourceIBMCISCertificateOrderValidator(),
+				"ibm_cis_filter":                        resourceIBMCISFilterValidator(),
 				"ibm_cr_namespace":                      resourceIBMCrNamespaceValidator(),
 				"ibm_tg_gateway":                        resourceIBMTGValidator(),
 				"ibm_app_config_type":                   resourceIbmAppConfigTypeValidator(),
@@ -671,8 +690,10 @@ func Validator() ValidatorDict {
 				"ibm_is_dedicated_host_disk_management": resourceIBMISDedicatedHostDiskManagementValidator(),
 				"ibm_is_flow_log":                       resourceIBMISFlowLogValidator(),
 				"ibm_is_instance_group":                 resourceIBMISInstanceGroupValidator(),
+				"ibm_is_instance_group_membership":      resourceIBMISInstanceGroupMembershipValidator(),
 				"ibm_is_instance_group_manager":         resourceIBMISInstanceGroupManagerValidator(),
 				"ibm_is_instance_group_manager_policy":  resourceIBMISInstanceGroupManagerPolicyValidator(),
+				"ibm_is_instance_group_manager_action":  resourceIBMISInstanceGroupManagerActionValidator(),
 				"ibm_is_floating_ip":                    resourceIBMISFloatingIPValidator(),
 				"ibm_is_ike_policy":                     resourceIBMISIKEValidator(),
 				"ibm_is_image":                          resourceIBMISImageValidator(),
@@ -685,6 +706,7 @@ func Validator() ValidatorDict {
 				"ibm_is_lb_pool":                        resourceIBMISLBPoolValidator(),
 				"ibm_is_lb":                             resourceIBMISLBValidator(),
 				"ibm_is_network_acl":                    resourceIBMISNetworkACLValidator(),
+				"ibm_is_network_acl_rule":               resourceIBMISNetworkACLRuleValidator(),
 				"ibm_is_public_gateway":                 resourceIBMISPublicGatewayValidator(),
 				"ibm_is_security_group_target":          resourceIBMISSecurityGroupTargetValidator(),
 				"ibm_is_security_group_rule":            resourceIBMISSecurityGroupRuleValidator(),
@@ -712,6 +734,7 @@ func Validator() ValidatorDict {
 				"ibm_container_cluster":                 resourceIBMContainerClusterValidator(),
 				"ibm_resource_tag":                      resourceIBMResourceTagValidator(),
 				"ibm_satellite_location":                resourceIBMSatelliteLocationValidator(),
+				"ibm_satellite_cluster":                 resourceIBMSatelliteClusterValidator(),
 			},
 			DataSourceValidatorDictionary: map[string]*ResourceValidator{
 				"ibm_is_subnet":               dataSourceIBMISSubnetValidator(),

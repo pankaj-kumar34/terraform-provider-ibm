@@ -31,7 +31,9 @@ The following arguments are supported:
 - `expand` - (optional, bool) If set to `true`, returns expanded view of the resource details.
 - `limit` - (optional, int) The number of records to retrieve. By default, the list operation return the first 10 records. To retrieve different set of records, use `limit` with `offset` to page through the available records.
 - `offset` - (optional, int) The number of records to skip. By specifying `offset`, you retrieve a subset of items that starts with the `offset` value. Use `offset` with `limit` to page through the available records.
-- `includes` - (optional, Array of string) Include feature and property details in the response.
+  <<<<<<< HEAD
+- # `includes` - (optional, Array of string) Include feature and property details in the response.
+  > > > > > > > upstream/master
 
 ## Attribute Reference
 

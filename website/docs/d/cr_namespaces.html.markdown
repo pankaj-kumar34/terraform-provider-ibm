@@ -3,34 +3,34 @@ subcategory: "Container Registry"
 layout: "ibm"
 page_title: "IBM: cr_namespaces"
 description: |-
-  Reads IBM Container Registry Namespaces.
+  Reads IBM Container Registry namespaces.
 ---
 
-# ibm\_cr_namespaces
+# ibm_cr_namespaces
+Lists an IBM Cloud Container Registry namespaces of an account in the targeted region.. For more information, about container registry, see [about IBM Cloud Container Registry](https://cloud.ibm.com/docs/Registry?topic=Registry-registry_overview).
 
-Lists a Container Registry Namespaces of an account. 
+## Example usage
+The following example shows how to configure a `namespace`.
 
-## Example Usage
-
-In the following example, you can configure a alb:
-
-```hcl
+```terraform
 data "ibm_cr_namespaces" "test" {}
 
 ```
 
-## Argument Reference
+## Argument reference
+The input parameters are not supported for this data source. 
 
-The following arguments are supported:
+## Attribute reference
+Review the attribute references that are exported.
 
-## Attribute Reference
+- `id` - (String) The unique identifier of the namespace datasource.
+- `namespaces` - (List) List of namespaces available in the account.
 
-In addition to all arguments above, the following attributes are exported:
-
-* `id` - Id of the Namespace Datasource.
-* `namespaces` - List of namespaces available in the account.
-    * `name` - The Name of the Namespace that has to be created.
-    * `resource_group_id` -  Id of the resource group to which the namespace has to be assigned.
-    * `crn` - Crn of the namespace.
-    * `created_on` - The Created Time of the Namespace.
-    * `updated_on` - The Updated Time of the Namespace.
+  Nested scheme for `namespace`:
+  - `account` - (String) The IBM Cloud account that owns the namespace.
+  - `crn` - (String) The `CRN` of the namespace. If the namespace has been assigned to a resource group.
+  - `created_date` - (Timestamp) The created time of the namespace.
+  - `name` - (String) The name of the namespace to create.
+  - `resource_group_id` - (String) ID of the resource group to which the namespace is assigned.
+  - `resource_created_date` - (Timestamp) When the namespace was assigned to a resource group.
+  - `updated_date` - (Timestamp) The updated time of the namespace.

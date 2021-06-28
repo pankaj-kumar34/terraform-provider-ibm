@@ -26,7 +26,9 @@ The following arguments are supported:
 
 - `guid` - (Required, string) guid of the App Configuration service. Get it from the service instance credentials section of the dashboard.
 - `environment_id` - (Required, string) Environment Id.
-- `includes` - (optional, Array of string) Include feature and property details in the response.
+  <<<<<<< HEAD
+- # `includes` - (optional, Array of string) Include feature and property details in the response.
+  > > > > > > > upstream/master
 - `expand` - (optional, bool) If set to `true`, returns expanded view of the resource details.
 
 ## Attribute Reference
